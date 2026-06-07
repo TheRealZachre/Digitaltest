@@ -1,0 +1,31 @@
+import { formatChannelList } from "@/lib/analytics/channel-selection";
+import type { Platform } from "@/lib/types";
+
+interface ReportDataBannerProps {
+  timeframe: string;
+  postCount: number;
+  companyName: string;
+  provider?: string;
+  selectedChannels?: Platform[];
+}
+
+export function ReportDataBanner({
+  timeframe,
+  postCount,
+  companyName,
+  provider,
+  selectedChannels,
+}: ReportDataBannerProps) {
+  const channelScope = selectedChannels
+    ? formatChannelList(selectedChannels)
+    : "all channels";
+
+  return (
+    <p className="rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
+      {timeframe} report for <strong>{companyName}</strong> — {postCount}{" "}
+      {postCount === 1 ? "post" : "posts"} from {channelScope}
+      {provider ? ` (${provider})` : ""}. Metrics include reactions, comments,
+      and reposts from public posts.
+    </p>
+  );
+}
