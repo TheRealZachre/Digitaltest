@@ -4,7 +4,7 @@ import { transcribeVideoFile } from "@/lib/youtube/transcribe";
 import { cleanupWorkDir, saveUploadToDisk } from "@/lib/youtube/upload";
 import type { VideoAnalyzeRequest } from "@/lib/youtube/types";
 
-export const maxDuration = 900;
+export const maxDuration = 300;
 
 function parseOptionalTags(value: FormDataEntryValue | null): string[] | undefined {
   if (typeof value !== "string" || !value.trim()) return undefined;
