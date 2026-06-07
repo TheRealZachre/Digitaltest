@@ -49,3 +49,4 @@ Cached posts are saved to `data/linkedin-posts.json` and used by all reports. Us
 | `apify` | `APIFY_TOKEN` | Public company posts (reactions, comments, captions) |
 | `linkedin` | `LINKEDIN_ACCESS_TOKEN` + `LINKEDIN_ORGANIZATION_ID` | Official API (requires client OAuth) |
 | `seed` | — | Curated research corpus |
+# Digital_Dashboard
