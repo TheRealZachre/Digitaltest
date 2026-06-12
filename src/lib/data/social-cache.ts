@@ -1,23 +1,20 @@
-import { readFile, writeFile, mkdir } from "fs/promises";
-import path from "path";
 import type { SocialPostCache } from "@/lib/social/types";
+import {
+  getRuntimeDataPath,
+  readJsonCache,
+  writeJsonCache,
+} from "./json-cache";
 
-const CACHE_PATH = path.join(process.cwd(), "data", "social-posts.json");
+const CACHE_FILENAME = "social-posts.json";
 
 export function getSocialCachePath() {
-  return CACHE_PATH;
+  return getRuntimeDataPath(CACHE_FILENAME);
 }
 
 export async function readSocialCache(): Promise<SocialPostCache | null> {
-  try {
-    const raw = await readFile(CACHE_PATH, "utf8");
-    return JSON.parse(raw) as SocialPostCache;
-  } catch {
-    return null;
-  }
+  return readJsonCache<SocialPostCache>(CACHE_FILENAME);
 }
 
 export async function writeSocialCache(cache: SocialPostCache): Promise<void> {
-  await mkdir(path.dirname(CACHE_PATH), { recursive: true });
-  await writeFile(CACHE_PATH, JSON.stringify(cache, null, 2), "utf8");
+  await writeJsonCache(CACHE_FILENAME, cache);
 }

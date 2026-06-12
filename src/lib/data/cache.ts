@@ -1,27 +1,20 @@
-import { readFile, writeFile, mkdir } from "fs/promises";
-import path from "path";
 import type { LinkedInPostCache } from "@/lib/linkedin/types";
+import {
+  getRuntimeDataPath,
+  readJsonCache,
+  writeJsonCache,
+} from "./json-cache";
 
-const CACHE_PATH = path.join(
-  process.cwd(),
-  "data",
-  "linkedin-posts.json"
-);
+const CACHE_FILENAME = "linkedin-posts.json";
 
 export function getCachePath() {
-  return CACHE_PATH;
+  return getRuntimeDataPath(CACHE_FILENAME);
 }
 
 export async function readPostCache(): Promise<LinkedInPostCache | null> {
-  try {
-    const raw = await readFile(CACHE_PATH, "utf8");
-    return JSON.parse(raw) as LinkedInPostCache;
-  } catch {
-    return null;
-  }
+  return readJsonCache<LinkedInPostCache>(CACHE_FILENAME);
 }
 
 export async function writePostCache(cache: LinkedInPostCache): Promise<void> {
-  await mkdir(path.dirname(CACHE_PATH), { recursive: true });
-  await writeFile(CACHE_PATH, JSON.stringify(cache, null, 2), "utf8");
+  await writeJsonCache(CACHE_FILENAME, cache);
 }
