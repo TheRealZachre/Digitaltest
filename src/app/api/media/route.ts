@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { shouldProxyImageUrl } from "@/lib/social/image-url";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 function refererForUrl(url: URL): string {
   const host = url.hostname;
 
@@ -47,8 +50,12 @@ export async function GET(request: Request) {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        Accept: "image/*,*/*;q=0.8",
+        Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
         Referer: refererForUrl(parsed),
+        Origin: refererForUrl(parsed).replace(/\/$/, ""),
+        "Sec-Fetch-Dest": "image",
+        "Sec-Fetch-Mode": "no-cors",
+        "Sec-Fetch-Site": "cross-site",
       },
       signal: AbortSignal.timeout(15_000),
     });

@@ -1,15 +1,6 @@
 import type { Platform } from "@/lib/types";
 
-const PROXY_HOSTS = [
-  "cdninstagram.com",
-  "fbcdn.net",
-  "twimg.com",
-  "pbs.twimg.com",
-  "licdn.com",
-  "ytimg.com",
-  "ggpht.com",
-  "googleusercontent.com",
-];
+const PROXY_HOSTS = ["cdninstagram.com", "fbcdn.net"];
 
 export function extractFacebookImageUrl(
   record: Record<string, unknown>
@@ -73,18 +64,36 @@ export function shouldProxyImageUrl(url: string): boolean {
   }
 }
 
-export function getPostImageSrc(url: string, platform?: Platform): string {
-  const normalized = platform
-    ? normalizeSocialImageUrl(platform, url)
-    : url;
+function placeholderImage(postId: string): string {
+  return `https://picsum.photos/seed/${encodeURIComponent(postId)}/600/600`;
+}
 
-  if (!normalized || normalized.includes("picsum.photos")) {
-    return normalized;
+export function getPostImageCandidates(
+  url: string,
+  platform?: Platform,
+  postId?: string
+): string[] {
+  const normalized = platform ? normalizeSocialImageUrl(platform, url) : url;
+  const candidates: string[] = [];
+
+  if (normalized && !normalized.includes("picsum.photos")) {
+    if (shouldProxyImageUrl(normalized)) {
+      candidates.push(`/api/media?url=${encodeURIComponent(normalized)}`);
+    }
+    candidates.push(normalized);
   }
 
-  if (shouldProxyImageUrl(normalized)) {
-    return `/api/media?url=${encodeURIComponent(normalized)}`;
+  if (postId) {
+    candidates.push(placeholderImage(postId));
   }
 
-  return normalized;
+  return [...new Set(candidates.filter(Boolean))];
+}
+
+export function getPostImageSrc(
+  url: string,
+  platform?: Platform,
+  postId?: string
+): string {
+  return getPostImageCandidates(url, platform, postId)[0] ?? "";
 }

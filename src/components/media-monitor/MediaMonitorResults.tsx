@@ -1,10 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { Copy, Download, ExternalLink, Heart, MessageCircle, Share2 } from "lucide-react";
 import clsx from "clsx";
 import { formatMediaMonitorForExport } from "@/lib/media-monitor/format-results";
-import { getPostImageSrc } from "@/lib/social/image-url";
+import { SocialPostImage } from "@/components/dashboard/SocialPostImage";
 import type { Platform } from "@/lib/types";
 import type { MediaMonitorSearchResponse } from "@/lib/media-monitor/types";
 
@@ -167,27 +166,18 @@ export function MediaMonitorResults({
           </p>
         ) : (
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            {result.socialPosts.map((post) => {
-              const imageSrc =
-                post.imageUrl && post.platform !== "reddit"
-                  ? getPostImageSrc(post.imageUrl, post.platform as Platform)
-                  : null;
-
-              return (
+            {result.socialPosts.map((post) => (
               <article
                 key={post.id}
                 className="overflow-hidden rounded-lg border border-slate-100 bg-slate-50"
               >
-                {imageSrc && (
-                  <div className="relative h-40 bg-slate-200">
-                    <Image
-                      src={imageSrc}
-                      alt=""
-                      fill
-                      unoptimized
-                      className="object-cover"
-                    />
-                  </div>
+                {post.imageUrl && post.platform !== "reddit" && (
+                  <SocialPostImage
+                    imageUrl={post.imageUrl}
+                    platform={post.platform as Platform}
+                    postId={post.id}
+                    containerClassName="h-40"
+                  />
                 )}
                 <div className="p-4">
                   <div className="flex flex-wrap items-center gap-2">
@@ -240,8 +230,7 @@ export function MediaMonitorResults({
                   )}
                 </div>
               </article>
-            );
-            })}
+            ))}
           </div>
         )}
       </section>
