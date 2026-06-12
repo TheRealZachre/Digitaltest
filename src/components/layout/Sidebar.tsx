@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Clapperboard,
   Crown,
+  ExternalLink,
   Eye,
   FileBarChart,
   Gauge,
@@ -57,35 +58,10 @@ interface NavSection {
   links: NavLink[];
 }
 
+const analyticsUrl =
+  process.env.NEXT_PUBLIC_ANALYTICS_URL ?? "http://localhost:3001";
+
 const navSections: NavSection[] = [
-  {
-    id: "analytics",
-    label: "Analytics",
-    icon: FileBarChart,
-    isActive: (pathname) =>
-      pathname.startsWith("/reports") || pathname.startsWith("/methodology"),
-    links: [
-      {
-        href: "/reports/channels",
-        label: "All Channels",
-        icon: Layers,
-        exact: true,
-      },
-      { href: "/reports/channels/linkedin", label: "LinkedIn", icon: Share2 },
-      { href: "/reports/channels/instagram", label: "Instagram", icon: Image },
-      { href: "/reports/channels/facebook", label: "Facebook", icon: Users },
-      { href: "/reports/channels/x", label: "X", icon: AtSign },
-      { href: "/reports/channels/youtube", label: "YouTube", icon: Play },
-      { href: "/reports/weekly", label: "Weekly Report", icon: Calendar },
-      { href: "/reports/monthly", label: "Monthly Report", icon: CalendarDays },
-      {
-        href: "/reports/quarterly",
-        label: "Quarterly One-Pager",
-        icon: CalendarRange,
-      },
-      { href: "/methodology", label: "Scoring Methodology", icon: BookOpen },
-    ],
-  },
   {
     id: "youtube",
     label: "YouTube SEO Optimizer",
@@ -320,6 +296,17 @@ export function Sidebar() {
           <LayoutDashboard className="h-4 w-4 shrink-0" />
           Overview
         </Link>
+
+        <a
+          href={analyticsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-brand-muted transition-colors hover:bg-white/5 hover:text-brand-off-white"
+        >
+          <FileBarChart className="h-4 w-4 shrink-0" />
+          <span className="flex-1">Analytics</span>
+          <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+        </a>
 
         {navSections.map((section) => {
           const isOpen = openSections[section.id] ?? false;
