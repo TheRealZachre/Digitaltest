@@ -1,10 +1,8 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
 import { PostInsightsAnalysis } from "@/components/dashboard/PostInsightsAnalysis";
+import { SocialPostImage } from "@/components/dashboard/SocialPostImage";
 import { StoryBeatBadge } from "@/components/narrative/StoryBeatBadge";
-import { getPostImageSrc } from "@/lib/social/image-url";
 import type { SocialPost } from "@/lib/types";
 import {
   clickThroughRate,
@@ -12,7 +10,7 @@ import {
   formatNumber,
   formatPercent,
 } from "@/lib/metrics";
-import { Heart, ImageIcon, MessageCircle, MousePointerClick, Share2 } from "lucide-react";
+import { Heart, MessageCircle, MousePointerClick, Share2 } from "lucide-react";
 import clsx from "clsx";
 
 interface PostPreviewProps {
@@ -35,42 +33,26 @@ export function PostPreview({
   showBudget = false,
   compact = false,
 }: PostPreviewProps) {
-  const [imageError, setImageError] = useState(false);
   const er = engagementRate(post.metrics);
   const ctr = clickThroughRate(post.metrics);
-  const imageSrc = getPostImageSrc(post.imageUrl, post.platform);
-  const showImage = imageSrc && !imageError;
 
   return (
     <article
       className={clsx(
-        "overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm",
+        "relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm",
         compact ? "" : "flex flex-col"
       )}
     >
-      <div
-        className={clsx(
-          "relative bg-slate-100",
+      <SocialPostImage
+        imageUrl={post.imageUrl}
+        platform={post.platform}
+        postId={post.id}
+        containerClassName={clsx(
+          "relative",
           compact ? "aspect-square" : "h-56"
         )}
-      >
-        {showImage ? (
-          <Image
-            src={imageSrc}
-            alt="Post creative"
-            fill
-            unoptimized
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 300px"
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-2 text-slate-400">
-            <ImageIcon className="h-10 w-10" />
-            <span className="text-xs">Preview unavailable</span>
-          </div>
-        )}
-        <div className="absolute left-3 top-3 flex gap-2">
+      />
+      <div className="pointer-events-none absolute left-3 top-3 z-10 flex gap-2">
           <span
             className={clsx(
               "rounded-full px-2.5 py-1 text-xs font-semibold capitalize text-white",
@@ -83,7 +65,6 @@ export function PostPreview({
             {post.type}
           </span>
         </div>
-      </div>
 
       <div className="flex flex-1 flex-col p-4">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
