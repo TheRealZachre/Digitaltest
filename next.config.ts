@@ -1,10 +1,7 @@
 import type { NextConfig } from "next";
+import { isCloudflareBuild } from "./src/lib/cloudflare-build";
 
-const isCloudflareBuild =
-  process.env.CF_PAGES === "1" ||
-  process.env.OPENNEXT_CLOUDFLARE === "1";
-
-const cloudflareNativeStubAliases = isCloudflareBuild
+const cloudflareNativeStubAliases = isCloudflareBuild()
   ? {
       "@xenova/transformers": "./src/lib/youtube/stubs/transformers-stub.ts",
       "ffmpeg-static": "./src/lib/youtube/stubs/ffmpeg-static-stub.ts",

@@ -1,0 +1,8 @@
+# Copy to .dev.vars for local OpenNext/Wrangler preview (do not commit .dev.vars)
+NEXTJS_ENV=development
+
+# Required in production (set in Cloudflare dashboard → Settings → Variables)
+# AUTH_SECRET=generate-with-openssl-rand-base64-32
+# AUTH_URL=https://your-worker.workers.dev
+# OPENAI_API_KEY=
+# TRANSCRIPTION_PROVIDER=openai

@@ -30,7 +30,6 @@ const nextConfig: NextConfig = {
     "onnxruntime-node",
   ],
   turbopack: {
-    root: repoRoot,
     resolveAlias: {
       "@": sharedSrc,
       "@analytics": localSrc,
