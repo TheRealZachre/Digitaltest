@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import clsx from "clsx";
+import { MetricLabel } from "./MetricLabel";
 
 interface StatCardProps {
   label: string;
@@ -8,6 +9,7 @@ interface StatCardProps {
   positive?: boolean;
   icon: LucideIcon;
   accent?: "indigo" | "emerald" | "amber" | "rose";
+  definition?: string;
 }
 
 const accents = {
@@ -24,12 +26,15 @@ export function StatCard({
   positive,
   icon: Icon,
   accent = "indigo",
+  definition,
 }: StatCardProps) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="overflow-visible rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-slate-500">{label}</p>
+          <p className="text-sm font-medium text-slate-500">
+            <MetricLabel definition={definition}>{label}</MetricLabel>
+          </p>
           <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
             {value}
           </p>

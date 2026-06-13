@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Serif_Display, Geist, Geist_Mono, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { SessionProvider } from "@/components/auth/SessionProvider";
 import { BRAND_ASSETS } from "@/lib/brand";
 import { PLATFORM_NAME, PLATFORM_TAGLINE } from "@/lib/company";
 import "./globals.css";
@@ -53,7 +54,7 @@ export default function RootLayout({
       className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} ${geistSans.variable} ${geistMono.variable} ${dmSerif.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-brand-paper font-sans text-brand-ink">
-        {children}
+        <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
   );

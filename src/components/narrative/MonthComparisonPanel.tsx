@@ -1,4 +1,4 @@
-import { PostPreview } from "@/components/dashboard/PostPreview";
+import { ReportPostsGrid } from "@/components/dashboard/ReportPostsGrid";
 import type { MonthBucket } from "@/lib/narrative/types";
 
 interface MonthComparisonPanelProps {
@@ -54,16 +54,11 @@ export function MonthComparisonPanel({
       </div>
 
       {prior.posts.length > 0 && (
-        <div>
-          <h3 className="mb-4 text-lg font-semibold text-slate-900">
-            Prior month posts ({prior.label})
-          </h3>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {prior.posts.map((post) => (
-              <PostPreview key={post.id} post={post} />
-            ))}
-          </div>
-        </div>
+        <ReportPostsGrid
+          posts={prior.posts}
+          title={`Prior month posts (${prior.label})`}
+          emptyMessage="No posts in the prior month."
+        />
       )}
     </section>
   );

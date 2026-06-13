@@ -27,7 +27,7 @@ export const ANALYTICS_CHANNELS: ChannelConfig[] = [
     href: "/reports/channels/linkedin",
     color: "#0A66C2",
     handle: "@beonemedicines",
-    followers: 487000,
+    followers: 249000,
   },
   {
     id: "instagram",

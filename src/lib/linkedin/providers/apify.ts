@@ -1,13 +1,14 @@
 import { coerceApifyRecord } from "../normalize";
+import { parseFollowersFromApifyPostRecords } from "./company-detail";
 import type { RawLinkedInPost } from "../types";
 
 const ACTOR = "apimaestro/linkedin-company-posts";
 
-export async function fetchPostsFromApify(
+async function fetchApifyRecords(
   companySlug: string,
   token: string,
   maxPosts: number
-): Promise<RawLinkedInPost[]> {
+): Promise<Record<string, unknown>[]> {
   const url = new URL(
     `https://api.apify.com/v2/acts/${ACTOR.replace("/", "~")}/run-sync-get-dataset-items`
   );
@@ -31,7 +32,24 @@ export async function fetchPostsFromApify(
     );
   }
 
-  const records = (await response.json()) as Record<string, unknown>[];
+  return (await response.json()) as Record<string, unknown>[];
+}
+
+export async function fetchPostsFromApify(
+  companySlug: string,
+  token: string,
+  maxPosts: number
+): Promise<RawLinkedInPost[]> {
+  const { posts } = await fetchApifyLinkedInData(companySlug, token, maxPosts);
+  return posts;
+}
+
+export async function fetchApifyLinkedInData(
+  companySlug: string,
+  token: string,
+  maxPosts: number
+): Promise<{ posts: RawLinkedInPost[]; followerHint?: number }> {
+  const records = await fetchApifyRecords(companySlug, token, maxPosts);
 
   const errorRecord = records.find((r) => r.message);
   if (errorRecord && records.length === 1) {
@@ -40,11 +58,14 @@ export async function fetchPostsFromApify(
     );
   }
 
-  return records
+  const followerHint = parseFollowersFromApifyPostRecords(records);
+  const posts = records
     .map((record, index) => coerceApifyRecord(record, index))
     .filter((post): post is RawLinkedInPost => post !== null)
     .sort(
       (a, b) =>
         new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
     );
+
+  return { posts, followerHint };
 }

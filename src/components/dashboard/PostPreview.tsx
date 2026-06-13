@@ -47,10 +47,8 @@ export function PostPreview({
         imageUrl={post.imageUrl}
         platform={post.platform}
         postId={post.id}
-        containerClassName={clsx(
-          "relative",
-          compact ? "aspect-square" : "h-56"
-        )}
+        fit="contain"
+        maxHeightClassName={compact ? "max-h-64" : "max-h-[28rem]"}
       />
       <div className="pointer-events-none absolute left-3 top-3 z-10 flex gap-2">
           <span

@@ -1,4 +1,5 @@
 import { inferStoryBeat } from "@/lib/narrative/beats";
+import { clicksFromImpressions } from "@/lib/metrics";
 import { parseRelativeYouTubeDate } from "@/lib/youtube/parse-relative-date";
 import type { ContentCategory, SocialPost } from "@/lib/types";
 import {
@@ -94,6 +95,8 @@ export function normalizeInstagramPost(
   const imageUrl =
     normalizeSocialImageUrl("instagram", rawImage) || placeholderImage(id);
 
+  const impressions = Math.round(reach * 1.35);
+
   return {
     id: `ig-${id}`,
     platform: "instagram",
@@ -104,13 +107,13 @@ export function normalizeInstagramPost(
     caption,
     imageUrl,
     metrics: {
-      impressions: Math.round(reach * 1.35),
+      impressions,
       reach,
       likes,
       comments,
       shares: 0,
       saves: 0,
-      clicks: 0,
+      clicks: clicksFromImpressions(impressions),
     },
   };
 }
@@ -138,6 +141,8 @@ export function normalizeFacebookPost(
     normalizeSocialImageUrl("facebook", extractFacebookImageUrl(record)) ||
     placeholderImage(id);
 
+  const impressions = Math.round(reach * 1.3);
+
   return {
     id: `fb-${id}`,
     platform: "facebook",
@@ -148,13 +153,13 @@ export function normalizeFacebookPost(
     caption,
     imageUrl,
     metrics: {
-      impressions: Math.round(reach * 1.3),
+      impressions,
       reach,
       likes,
       comments: 0,
       shares,
       saves: 0,
-      clicks: 0,
+      clicks: clicksFromImpressions(impressions),
     },
   };
 }
@@ -182,6 +187,8 @@ export function normalizeXPost(
   const imageUrl =
     normalizeSocialImageUrl("x", rawImage) || placeholderImage(id);
 
+  const impressions = views || Math.round(reach * 1.2);
+
   return {
     id: `x-${id}`,
     platform: "x",
@@ -192,13 +199,13 @@ export function normalizeXPost(
     caption,
     imageUrl,
     metrics: {
-      impressions: views || Math.round(reach * 1.2),
+      impressions,
       reach,
       likes,
       comments,
       shares,
       saves: 0,
-      clicks: 0,
+      clicks: clicksFromImpressions(impressions),
     },
   };
 }
@@ -219,6 +226,8 @@ export function normalizeYouTubePost(
   const imageUrl =
     String(record.thumbnailUrl ?? "") || placeholderImage(id);
 
+  const impressions = views;
+
   return {
     id: `yt-${id}`,
     platform: "youtube",
@@ -229,13 +238,13 @@ export function normalizeYouTubePost(
     caption,
     imageUrl,
     metrics: {
-      impressions: views,
+      impressions,
       reach,
       likes: 0,
       comments: 0,
       shares: 0,
       saves: 0,
-      clicks: 0,
+      clicks: clicksFromImpressions(impressions),
     },
   };
 }

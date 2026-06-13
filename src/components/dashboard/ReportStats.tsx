@@ -12,6 +12,7 @@ import {
   formatNumber,
   formatPercent,
 } from "@/lib/metrics";
+import { metricDefinition } from "@/lib/metric-definitions";
 import { StatCard } from "./StatCard";
 
 interface ReportStatsProps {
@@ -26,28 +27,33 @@ export function ReportStats({ summary }: ReportStatsProps) {
         value={String(summary.totalPosts)}
         icon={TrendingUp}
         accent="indigo"
+        definition={metricDefinition("totalPosts")}
       />
       <StatCard
         label="Avg. Engagement Rate"
         value={formatPercent(summary.avgEngagementRate)}
+        definition={metricDefinition("avgEngagementRate")}
         icon={Heart}
         accent="rose"
       />
       <StatCard
         label="Avg. CTR"
         value={formatPercent(summary.avgCTR)}
+        definition={metricDefinition("avgCTR")}
         icon={MousePointerClick}
         accent="emerald"
       />
       <StatCard
         label="Total Reach"
         value={formatNumber(summary.totalReach)}
+        definition={metricDefinition("totalReach")}
         icon={Users}
         accent="indigo"
       />
       <StatCard
         label="Total Impressions"
         value={formatNumber(summary.totalImpressions)}
+        definition={metricDefinition("totalImpressions")}
         icon={Eye}
         accent="amber"
       />

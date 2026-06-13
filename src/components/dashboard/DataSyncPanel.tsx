@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { ChannelSelector } from "@/components/dashboard/ChannelSelector";
 import { ANALYTICS_CHANNEL_PLATFORMS } from "@/lib/analytics/channels";
@@ -9,6 +9,7 @@ import {
   CHANNEL_LABELS,
   parseAnalyticsChannels,
 } from "@/lib/analytics/channel-selection";
+import { formatFollowerCount } from "@/lib/social/followers";
 import type { Platform } from "@/lib/types";
 
 interface ChannelMeta {
@@ -34,7 +35,6 @@ interface DataSyncPanelProps {
 }
 
 function readSelectedChannels(): Platform[] {
-  if (typeof window === "undefined") return [...ANALYTICS_CHANNEL_PLATFORMS];
   return parseAnalyticsChannels(
     localStorage.getItem(ANALYTICS_CHANNELS_STORAGE_KEY)
   );
@@ -47,11 +47,15 @@ export function DataSyncPanel({
 }: DataSyncPanelProps) {
   const [meta, setMeta] = useState(initialMeta);
   const [sources, setSources] = useState(channelSources);
-  const [selectedChannels, setSelectedChannels] = useState<Platform[]>(
-    readSelectedChannels
-  );
+  const [selectedChannels, setSelectedChannels] = useState<Platform[]>(() => [
+    ...ANALYTICS_CHANNEL_PLATFORMS,
+  ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelectedChannels(readSelectedChannels());
+  }, []);
 
   const liveCount = ANALYTICS_CHANNEL_PLATFORMS.filter(
     (platform) => sources?.[platform] === "live"
@@ -148,6 +152,14 @@ export function DataSyncPanel({
                   sources?.[platform] === "live";
                 const failed = channel?.dataSource === "error";
                 const isIncluded = selectedChannels.includes(platform);
+                const details = [
+                  channel?.postCount != null ? `${channel.postCount} posts` : null,
+                  channel?.followers != null && channel.followers > 0
+                    ? `${formatFollowerCount(channel.followers)} followers`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ");
 
                 return (
                   <li
@@ -163,7 +175,7 @@ export function DataSyncPanel({
                     }`}
                   >
                     {CHANNEL_LABELS[platform]}
-                    {channel?.postCount != null && ` (${channel.postCount})`}
+                    {details ? ` (${details})` : ""}
                   </li>
                 );
               })}
@@ -188,12 +200,6 @@ export function DataSyncPanel({
           onChange={setSelectedChannels}
         />
       )}
-
-      <p className="mt-3 text-xs text-slate-400">
-        Pulls selected channels via Apify (set APIFY_TOKEN in .env.local).
-        Deselected channels stay in cache but are excluded from aggregate
-        reports.
-      </p>
     </div>
   );
 }

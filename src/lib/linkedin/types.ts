@@ -18,6 +18,7 @@ export interface LinkedInSyncMeta {
   provider: LinkedInDataProvider;
   companySlug: string;
   postCount: number;
+  followers?: number;
   note?: string;
 }
 

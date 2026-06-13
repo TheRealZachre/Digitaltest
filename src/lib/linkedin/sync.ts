@@ -1,12 +1,16 @@
-import { writePostCache } from "@/lib/data/cache";
+import { readPostCache, writePostCache } from "@/lib/data/cache";
+import { resolveFollowerCount } from "@/lib/social/followers";
 import { getLinkedInConfig } from "./config";
 import { normalizeLinkedInPost } from "./normalize";
-import { fetchPostsFromApify } from "./providers/apify";
+import { fetchApifyLinkedInData } from "./providers/apify";
+import { fetchLinkedInCompanyFollowers } from "./providers/company-detail";
 import { fetchPostsFromLinkedInApi } from "./providers/linkedin-api";
 import { fetchPostsFromSeed } from "./providers/seed";
-import type { LinkedInDataProvider, LinkedInPostCache } from "./types";
+import type { LinkedInDataProvider, LinkedInPostCache, RawLinkedInPost } from "./types";
 
-async function fetchRawPosts(provider: LinkedInDataProvider) {
+async function fetchRawPosts(
+  provider: LinkedInDataProvider
+): Promise<{ posts: RawLinkedInPost[]; followerHint?: number }> {
   const config = getLinkedInConfig();
 
   switch (provider) {
@@ -16,7 +20,7 @@ async function fetchRawPosts(provider: LinkedInDataProvider) {
           "APIFY_TOKEN is required for live public LinkedIn sync. Get one at https://console.apify.com — or set LINKEDIN_DATA_PROVIDER=seed to use curated research data."
         );
       }
-      return fetchPostsFromApify(
+      return fetchApifyLinkedInData(
         config.companySlug,
         config.apifyToken,
         config.maxPosts
@@ -28,14 +32,15 @@ async function fetchRawPosts(provider: LinkedInDataProvider) {
           "LINKEDIN_ACCESS_TOKEN and LINKEDIN_ORGANIZATION_ID are required for the official LinkedIn API."
         );
       }
-      return fetchPostsFromLinkedInApi(
+      const posts = await fetchPostsFromLinkedInApi(
         config.linkedinOrganizationId,
         config.linkedinAccessToken,
         config.maxPosts
       );
+      return { posts };
     }
     case "seed":
-      return fetchPostsFromSeed();
+      return { posts: await fetchPostsFromSeed() };
     default:
       throw new Error(`Unknown provider: ${provider}`);
   }
@@ -46,8 +51,25 @@ export async function syncLinkedInPosts(
 ): Promise<LinkedInPostCache> {
   const config = getLinkedInConfig();
   const provider = providerOverride ?? config.provider;
-  const rawPosts = await fetchRawPosts(provider);
+  const existingCache = await readPostCache();
+  const previousFollowers = existingCache?.meta.followers;
+
+  const { posts: rawPosts, followerHint } = await fetchRawPosts(provider);
   const posts = rawPosts.map(normalizeLinkedInPost);
+
+  let followers: number | undefined;
+  if (config.apifyToken) {
+    const companyFollowers = await fetchLinkedInCompanyFollowers(
+      config.companySlug,
+      config.apifyToken
+    ).catch(() => undefined);
+    followers = resolveFollowerCount(
+      companyFollowers ?? followerHint,
+      previousFollowers
+    );
+  } else {
+    followers = resolveFollowerCount(followerHint, previousFollowers);
+  }
 
   const cache: LinkedInPostCache = {
     meta: {
@@ -55,6 +77,7 @@ export async function syncLinkedInPosts(
       provider,
       companySlug: config.companySlug,
       postCount: posts.length,
+      followers,
       note:
         provider === "seed"
           ? "Curated from public LinkedIn research (CGA-style). Set APIFY_TOKEN to pull live data."

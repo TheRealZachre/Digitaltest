@@ -1,4 +1,8 @@
-import { rankByEngagement } from "@/lib/metrics";
+import {
+  analysisPostPool,
+  rankByEngagement,
+  sortPostsByDateDesc,
+} from "@/lib/metrics";
 import type { SocialPost } from "@/lib/types";
 
 export type DeepDivePerformance = "top" | "under" | null;
@@ -41,11 +45,13 @@ export function deepDivePerformance(
 
 export function selectDeepDivePosts(
   posts: SocialPost[],
-  max = 6
+  max = 6,
+  recentDays = 30
 ): SocialPost[] {
   if (posts.length === 0) return [];
 
-  const ranked = rankByEngagement(posts);
+  const pool = analysisPostPool(posts, recentDays);
+  const ranked = rankByEngagement(pool);
   const selected: SocialPost[] = [];
   const seen = new Set<string>();
 
@@ -55,23 +61,31 @@ export function selectDeepDivePosts(
     selected.push(post);
   };
 
-  add(ranked[0]);
-  add(ranked[1]);
-  add(ranked[ranked.length - 1]);
+  const topCount = Math.ceil(max / 2);
+  const bottomCount = Math.floor(max / 2);
 
-  const midIndices = [
-    Math.floor(ranked.length * 0.25),
-    Math.floor(ranked.length * 0.5),
-    Math.floor(ranked.length * 0.75),
-  ];
+  for (let i = 0; i < topCount && i < ranked.length; i++) {
+    add(ranked[i]);
+  }
 
-  for (const index of midIndices) {
+  for (let i = 0; i < bottomCount; i++) {
+    const index = ranked.length - 1 - i;
+    if (index < topCount) break;
     add(ranked[index]);
   }
 
-  for (const post of ranked) {
-    add(post);
+  if (selected.length < max) {
+    for (const post of sortPostsByDateDesc(pool)) {
+      add(post);
+    }
   }
 
   return selected.slice(0, max);
+}
+
+export function deepDivePostPool(
+  posts: SocialPost[],
+  recentDays = 30
+): SocialPost[] {
+  return analysisPostPool(posts, recentDays);
 }

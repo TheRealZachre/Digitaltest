@@ -1,4 +1,5 @@
 import { inferStoryBeat } from "@/lib/narrative/beats";
+import { clicksFromImpressions } from "@/lib/metrics";
 import type { ContentCategory, SocialPost } from "@/lib/types";
 import type { RawLinkedInPost } from "./types";
 
@@ -43,6 +44,7 @@ function estimateReach(reactions: number, reposts: number): number {
 export function normalizeLinkedInPost(raw: RawLinkedInPost): SocialPost {
   const text = [raw.headline, raw.text].filter(Boolean).join(" — ");
   const reach = estimateReach(raw.reactions, raw.reposts);
+  const impressions = Math.round(reach * 1.35);
 
   return {
     id: raw.id,
@@ -56,13 +58,13 @@ export function normalizeLinkedInPost(raw: RawLinkedInPost): SocialPost {
       raw.imageUrl ??
       `https://picsum.photos/seed/${encodeURIComponent(raw.id)}/600/600`,
     metrics: {
-      impressions: Math.round(reach * 1.35),
+      impressions,
       reach,
       likes: raw.reactions,
       comments: raw.comments,
       shares: raw.reposts,
       saves: 0,
-      clicks: 0,
+      clicks: clicksFromImpressions(impressions),
     },
   };
 }

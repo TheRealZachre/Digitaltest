@@ -1,10 +1,11 @@
 {
   "meta": {
-    "syncedAt": "2026-06-12T15:41:12.787Z",
+    "syncedAt": "2026-06-13T03:30:12.361Z",
     "companySlug": "beonemedicines",
     "channels": {
       "linkedin": {
         "postCount": 50,
+        "followers": 249311,
         "provider": "apify",
         "dataSource": "live",
         "syncedAt": "2026-06-12T15:39:52.550Z"
@@ -14,28 +15,32 @@
         "followers": 9317,
         "provider": "apify",
         "dataSource": "live",
-        "syncedAt": "2026-06-12T15:39:47.975Z"
+        "syncedAt": "2026-06-12T15:39:47.975Z",
+        "error": "APIFY_TOKEN is required for non-LinkedIn channels. Set it in .env.local."
       },
       "facebook": {
         "postCount": 47,
         "followers": 45744,
         "provider": "apify",
         "dataSource": "live",
-        "syncedAt": "2026-06-12T15:39:47.976Z"
+        "syncedAt": "2026-06-12T15:39:47.976Z",
+        "error": "APIFY_TOKEN is required for non-LinkedIn channels. Set it in .env.local."
       },
       "x": {
         "postCount": 20,
         "followers": 5089,
         "provider": "apify",
         "dataSource": "live",
-        "syncedAt": "2026-06-12T15:39:47.976Z"
+        "syncedAt": "2026-06-12T15:39:47.976Z",
+        "error": "APIFY_TOKEN is required for non-LinkedIn channels. Set it in .env.local."
       },
       "youtube": {
         "postCount": 50,
         "followers": 126000,
         "provider": "apify",
         "dataSource": "live",
-        "syncedAt": "2026-06-12T15:39:47.976Z"
+        "syncedAt": "2026-06-12T15:39:47.976Z",
+        "error": "APIFY_TOKEN is required for non-LinkedIn channels. Set it in .env.local."
       }
     }
   },

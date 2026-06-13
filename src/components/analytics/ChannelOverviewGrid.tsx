@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { ChannelSummary } from "@/lib/types";
 import { formatNumber, formatPercent } from "@/lib/metrics";
+import { metricDefinition } from "@/lib/metric-definitions";
+import { MetricLabel } from "@/components/dashboard/MetricLabel";
 import { getChannelConfigByPlatform } from "@/lib/analytics/channels";
 
 interface ChannelOverviewGridProps {
@@ -19,7 +21,7 @@ export function ChannelOverviewGrid({ channels }: ChannelOverviewGridProps) {
           <Link
             key={channel.platform}
             href={href}
-            className="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-indigo-200 hover:bg-indigo-50/20"
+            className="group overflow-visible rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-indigo-200 hover:bg-indigo-50/20"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
@@ -49,27 +51,63 @@ export function ChannelOverviewGrid({ channels }: ChannelOverviewGridProps) {
 
             <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
               <div>
-                <dt className="text-slate-500">Followers</dt>
+                <dt className="text-slate-500">
+                  <MetricLabel definition={metricDefinition("followers")}>
+                    Followers
+                  </MetricLabel>
+                </dt>
                 <dd className="font-semibold text-slate-900">
                   {formatNumber(channel.followers)}
                 </dd>
               </div>
               <div>
-                <dt className="text-slate-500">Posts (loaded)</dt>
+                <dt className="text-slate-500">
+                  <MetricLabel definition={metricDefinition("postCount")}>
+                    Posts (loaded)
+                  </MetricLabel>
+                </dt>
                 <dd className="font-semibold text-slate-900">
                   {channel.postCount}
                 </dd>
               </div>
               <div>
-                <dt className="text-slate-500">Avg. ER</dt>
+                <dt className="text-slate-500">
+                  <MetricLabel definition={metricDefinition("avgEngagementRate")}>
+                    Avg. ER
+                  </MetricLabel>
+                </dt>
                 <dd className="font-semibold text-slate-900">
                   {formatPercent(channel.avgEngagementRate)}
                 </dd>
               </div>
               <div>
-                <dt className="text-slate-500">Reach</dt>
+                <dt className="text-slate-500">
+                  <MetricLabel definition={metricDefinition("avgCTR")}>
+                    Avg. CTR
+                  </MetricLabel>
+                </dt>
+                <dd className="font-semibold text-slate-900">
+                  {formatPercent(channel.avgCTR)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">
+                  <MetricLabel definition={metricDefinition("reach")}>
+                    Reach
+                  </MetricLabel>
+                </dt>
                 <dd className="font-semibold text-slate-900">
                   {formatNumber(channel.totalReach)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">
+                  <MetricLabel definition={metricDefinition("impressions")}>
+                    Impressions
+                  </MetricLabel>
+                </dt>
+                <dd className="font-semibold text-slate-900">
+                  {formatNumber(channel.totalImpressions)}
                 </dd>
               </div>
             </dl>

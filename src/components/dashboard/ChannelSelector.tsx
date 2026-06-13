@@ -17,7 +17,6 @@ interface ChannelSelectorProps {
 }
 
 function readInitialChannels(): Platform[] {
-  if (typeof window === "undefined") return [...ANALYTICS_CHANNEL_PLATFORMS];
   const stored = localStorage.getItem(ANALYTICS_CHANNELS_STORAGE_KEY);
   return parseAnalyticsChannels(stored);
 }
@@ -32,14 +31,15 @@ export function ChannelSelector({
   channelSources,
   onChange,
 }: ChannelSelectorProps) {
-  const [selected, setSelected] = useState<Platform[]>(readInitialChannels);
+  const [selected, setSelected] = useState<Platform[]>(() => [
+    ...ANALYTICS_CHANNEL_PLATFORMS,
+  ]);
 
   useEffect(() => {
     const initial = readInitialChannels();
     setSelected(initial);
     onChange?.(initial);
-    persistSelectedChannels(initial);
-  }, []);
+  }, [onChange]);
 
   function updateChannels(next: Platform[]) {
     setSelected(next);

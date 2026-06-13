@@ -25,6 +25,7 @@ export interface ChannelSummary {
   followerGrowth: number;
   postCount: number;
   avgEngagementRate: number;
+  avgCTR: number;
   totalReach: number;
   totalImpressions: number;
   totalSpend: number;

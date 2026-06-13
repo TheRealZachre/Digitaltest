@@ -31,8 +31,9 @@ import {
   Play,
   Radar,
   Search,
-  ShieldAlert,
   Share2,
+  Shield,
+  ShieldAlert,
   Sparkles,
   Users,
   Video,
@@ -40,6 +41,7 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { UserMenu } from "@/components/auth/UserMenu";
 import { PLATFORM_NAME } from "@/lib/company";
 
 interface NavLink {
@@ -275,7 +277,7 @@ function linkIsActive(pathname: string, href: string, exact?: boolean) {
   return exact ? pathname === href : pathname.startsWith(href);
 }
 
-export function Sidebar() {
+export function Sidebar({ showAdminNav = false }: { showAdminNav?: boolean }) {
   const pathname = usePathname();
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(
@@ -296,6 +298,7 @@ export function Sidebar() {
   }, [pathname]);
 
   const overviewActive = pathname === "/";
+  const adminActive = pathname.startsWith("/admin");
 
   function toggleSection(id: string) {
     setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -320,6 +323,21 @@ export function Sidebar() {
           <LayoutDashboard className="h-4 w-4 shrink-0" />
           Overview
         </Link>
+
+        {showAdminNav && (
+          <Link
+            href="/admin"
+            className={clsx(
+              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+              adminActive
+                ? "bg-brand-indigo/15 text-brand-indigo-bright"
+                : "text-brand-muted hover:bg-white/5 hover:text-brand-off-white"
+            )}
+          >
+            <Shield className="h-4 w-4 shrink-0" />
+            Admin Console
+          </Link>
+        )}
 
         {navSections.map((section) => {
           const isOpen = openSections[section.id] ?? false;
@@ -379,9 +397,12 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-brand-border p-4">
-        <p className="text-xs text-brand-muted">Powered by</p>
-        <p className="text-sm text-brand-off-white">{PLATFORM_NAME}</p>
+      <div className="border-t border-brand-border p-4 space-y-4">
+        <UserMenu />
+        <div>
+          <p className="text-xs text-brand-muted">Powered by</p>
+          <p className="text-sm text-brand-off-white">{PLATFORM_NAME}</p>
+        </div>
       </div>
     </aside>
   );

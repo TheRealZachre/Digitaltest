@@ -29,6 +29,9 @@ async function main() {
   console.log(`  Provider: ${cache.meta.provider}`);
   console.log(`  Company:  ${cache.meta.companySlug}`);
   console.log(`  Saved at: ${cache.meta.syncedAt}`);
+  if (cache.meta.followers != null) {
+    console.log(`  Followers: ${cache.meta.followers.toLocaleString()}`);
+  }
   if (cache.meta.note) console.log(`  Note:     ${cache.meta.note}`);
 }
 

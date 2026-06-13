@@ -1,3 +1,4 @@
+import { subDays } from "date-fns";
 import type { BeatPerformance } from "./narrative/types";
 import type {
   BudgetRecommendation,
@@ -13,9 +14,23 @@ export function engagementRate(metrics: PostMetrics): number {
   return (engagements / metrics.reach) * 100;
 }
 
+/** Default CTR for posts without native click data (matches seed corpus). */
+const ESTIMATED_CTR = 0.012;
+
+export function clicksFromImpressions(impressions: number): number {
+  if (impressions <= 0) return 0;
+  return Math.max(1, Math.floor(impressions * ESTIMATED_CTR));
+}
+
+export function estimatedClicks(metrics: PostMetrics): number {
+  if (metrics.clicks > 0) return metrics.clicks;
+  if (metrics.impressions === 0) return 0;
+  return Math.max(1, Math.floor(metrics.impressions * ESTIMATED_CTR));
+}
+
 export function clickThroughRate(metrics: PostMetrics): number {
   if (metrics.impressions === 0) return 0;
-  return (metrics.clicks / metrics.impressions) * 100;
+  return (estimatedClicks(metrics) / metrics.impressions) * 100;
 }
 
 export function costPerEngagement(metrics: PostMetrics): number | null {
@@ -30,6 +45,32 @@ export function rankByEngagement(posts: SocialPost[]): SocialPost[] {
   return [...posts].sort(
     (a, b) => engagementRate(b.metrics) - engagementRate(a.metrics)
   );
+}
+
+export function filterRecentPosts(
+  posts: SocialPost[],
+  days: number
+): SocialPost[] {
+  const cutoff = subDays(new Date(), days);
+  return posts.filter((post) => new Date(post.publishedAt) >= cutoff);
+}
+
+export function sortPostsByDateDesc(posts: SocialPost[]): SocialPost[] {
+  return [...posts].sort(
+    (a, b) =>
+      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+  );
+}
+
+/** Prefer recent posts for analysis; fall back to newest when the window is sparse. */
+export function analysisPostPool(
+  posts: SocialPost[],
+  recentDays = 30,
+  minPosts = 3
+): SocialPost[] {
+  const recent = filterRecentPosts(posts, recentDays);
+  if (recent.length >= minPosts) return recent;
+  return sortPostsByDateDesc(posts).slice(0, Math.max(minPosts, 12));
 }
 
 export function beatPerformance(posts: SocialPost[]): BeatPerformance[] {
@@ -148,14 +189,21 @@ function uniqueInsights(items: string[]): string[] {
   return [...new Set(items)];
 }
 
-export function whatWorkedAnalysis(posts: SocialPost[]): {
+export function whatWorkedAnalysis(
+  posts: SocialPost[],
+  recentDays: number | null = 30
+): {
   worked: string[];
   didNot: string[];
 } {
-  const ranked = rankByEngagement(posts);
+  const pool =
+    recentDays == null || recentDays <= 0
+      ? posts
+      : analysisPostPool(posts, recentDays);
+  const ranked = rankByEngagement(pool);
   const top = ranked.slice(0, 3);
   const bottom = ranked.slice(-3).reverse();
-  const beats = beatPerformance(posts);
+  const beats = beatPerformance(pool);
 
   const worked = uniqueInsights([
     ...top.map(

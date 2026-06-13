@@ -1,4 +1,4 @@
-import { selectDeepDivePosts } from "@/lib/narrative/deep-dive";
+import { selectDeepDivePosts, deepDivePostPool } from "@/lib/narrative/deep-dive";
 import { rankByEngagement } from "@/lib/metrics";
 import type { SocialPost } from "@/lib/types";
 import { PostDeepDive } from "./PostDeepDive";
@@ -7,15 +7,18 @@ interface PostDeepDivesSectionProps {
   posts: SocialPost[];
   title?: string;
   subtitle?: string;
+  recentDays?: number;
 }
 
 export function PostDeepDivesSection({
   posts,
   title = "Why these landed. Why these didn't.",
-  subtitle = "Per-post analysis: what worked, what diluted, and the narrative role each post played in the larger arc.",
+  subtitle = "Per-post analysis from the latest posts: what worked, what diluted, and the narrative role each played in the recent arc.",
+  recentDays = 30,
 }: PostDeepDivesSectionProps) {
-  const featured = selectDeepDivePosts(posts);
-  const rankedPosts = rankByEngagement(posts);
+  const pool = deepDivePostPool(posts, recentDays);
+  const featured = selectDeepDivePosts(posts, 6, recentDays);
+  const rankedPosts = rankByEngagement(pool);
 
   if (featured.length === 0) return null;
 

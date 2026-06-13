@@ -80,6 +80,7 @@ export async function getLinkedInPosts(): Promise<{
     provider: string;
     companySlug: string;
     postCount: number;
+    followers?: number;
   };
 }> {
   const cache = await readPostCache();
@@ -92,6 +93,7 @@ export async function getLinkedInPosts(): Promise<{
         provider: cache.meta.provider,
         companySlug: cache.meta.companySlug,
         postCount: cache.meta.postCount,
+        followers: cache.meta.followers,
       },
     };
   }
@@ -150,6 +152,10 @@ export async function getMultiChannelPosts(): Promise<{
   );
 
   const linkedInSource = source === "cache" ? "live" : "seed";
+  const linkedInFollowers =
+    meta?.followers && meta.followers > 0
+      ? { linkedin: meta.followers }
+      : {};
 
   return {
     posts,
@@ -161,7 +167,7 @@ export async function getMultiChannelPosts(): Promise<{
       x: "seed",
       youtube: "seed",
     },
-    channelFollowers: {},
+    channelFollowers: linkedInFollowers,
     meta: meta
       ? {
           syncedAt: meta.syncedAt,
@@ -170,6 +176,7 @@ export async function getMultiChannelPosts(): Promise<{
           channels: {
             linkedin: {
               postCount: meta.postCount,
+              followers: meta.followers,
               provider: meta.provider,
               dataSource: linkedInSource,
               syncedAt: meta.syncedAt,

@@ -15,6 +15,8 @@ interface SocialPostImageProps {
   className?: string;
   containerClassName?: string;
   sizes?: string;
+  fit?: "contain" | "cover";
+  maxHeightClassName?: string;
 }
 
 export function SocialPostImage({
@@ -22,9 +24,11 @@ export function SocialPostImage({
   platform,
   postId,
   alt = "Post creative",
-  className = "object-cover",
+  className,
   containerClassName,
   sizes = "(max-width: 768px) 100vw, 300px",
+  fit = "contain",
+  maxHeightClassName = "max-h-[28rem]",
 }: SocialPostImageProps) {
   const candidates = useMemo(
     () => getPostImageCandidates(imageUrl, platform, postId),
@@ -43,6 +47,39 @@ export function SocialPostImage({
     });
   }
 
+  if (fit === "contain") {
+    return (
+      <div
+        className={clsx(
+          "flex w-full items-center justify-center bg-slate-100",
+          containerClassName
+        )}
+      >
+        {showImage ? (
+          <Image
+            src={imageSrc}
+            alt={alt}
+            width={800}
+            height={800}
+            unoptimized
+            className={clsx(
+              "h-auto w-full object-contain",
+              maxHeightClassName,
+              className
+            )}
+            sizes={sizes}
+            onError={handleImageError}
+          />
+        ) : (
+          <div className="flex min-h-48 w-full flex-col items-center justify-center gap-2 py-10 text-slate-400">
+            <ImageIcon className="h-10 w-10" />
+            <span className="text-xs">Preview unavailable</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={clsx("relative bg-slate-100", containerClassName)}>
       {showImage ? (
@@ -51,7 +88,7 @@ export function SocialPostImage({
           alt={alt}
           fill
           unoptimized
-          className={className}
+          className={clsx("object-cover", className)}
           sizes={sizes}
           onError={handleImageError}
         />

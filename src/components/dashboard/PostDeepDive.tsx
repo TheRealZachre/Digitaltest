@@ -5,7 +5,11 @@ import {
   postHeadline,
   postSnippet,
 } from "@/lib/narrative/deep-dive";
-import { rankByEngagement } from "@/lib/metrics";
+import {
+  clickThroughRate,
+  rankByEngagement,
+  formatPercent,
+} from "@/lib/metrics";
 import type { SocialPost } from "@/lib/types";
 import clsx from "clsx";
 import { PostInsightsAnalysis } from "./PostInsightsAnalysis";
@@ -83,6 +87,10 @@ export function PostDeepDive({ post, rankedPosts }: PostDeepDiveProps) {
             <EngagementStat label="Reactions" value={post.metrics.likes} />
             <EngagementStat label="Comments" value={post.metrics.comments} />
             <EngagementStat label="Reposts" value={post.metrics.shares} />
+            <EngagementStat
+              label="CTR"
+              value={formatPercent(clickThroughRate(post.metrics))}
+            />
           </>
         ) : (
           <EngagementStat

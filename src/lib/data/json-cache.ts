@@ -1,9 +1,21 @@
+import { existsSync } from "fs";
 import { readFile, writeFile, mkdir } from "fs/promises";
 import path from "path";
 
 const TMP_DATA_DIR = path.join("/tmp", "digital-dashboard-data");
 
 function getBundledDataDir(): string {
+  const candidates = [
+    path.join(process.cwd(), "data"),
+    path.join(process.cwd(), "..", "..", "data"),
+  ];
+
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
   return path.join(process.cwd(), "data");
 }
 

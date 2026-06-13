@@ -1,5 +1,6 @@
 import { readPostCache } from "@/lib/data/cache";
 import { readSocialCache, writeSocialCache } from "@/lib/data/social-cache";
+import { resolveFollowerCount } from "./followers";
 import { syncLinkedInPosts } from "@/lib/linkedin/sync";
 import type { SocialPost } from "@/lib/types";
 import { getSocialConfig } from "./config";
@@ -17,12 +18,16 @@ import type {
 async function syncLinkedInChannel(
   maxPosts: number
 ): Promise<{ posts: SocialPost[]; meta: ChannelSyncMeta }> {
+  const existingCache = await readSocialCache();
+  const previousFollowers = existingCache?.meta.channels?.linkedin?.followers;
+
   try {
     const cache = await syncLinkedInPosts();
     return {
       posts: cache.posts.slice(0, maxPosts),
       meta: {
         postCount: cache.posts.length,
+        followers: resolveFollowerCount(cache.meta.followers, previousFollowers),
         provider: cache.meta.provider,
         dataSource: cache.meta.provider === "seed" ? "seed" : "live",
         syncedAt: cache.meta.syncedAt,
@@ -36,6 +41,10 @@ async function syncLinkedInChannel(
       posts: cached.posts.slice(0, maxPosts),
       meta: {
         postCount: cached.posts.length,
+        followers: resolveFollowerCount(
+          cached.meta.followers,
+          previousFollowers
+        ),
         provider: cached.meta.provider,
         dataSource: cached.meta.provider === "seed" ? "seed" : "live",
         syncedAt: cached.meta.syncedAt,
@@ -47,7 +56,8 @@ async function syncLinkedInChannel(
 async function syncChannel(
   channel: SocialChannel,
   token: string,
-  maxPosts: number
+  maxPosts: number,
+  previousFollowers?: number
 ): Promise<{ posts: SocialPost[]; meta: ChannelSyncMeta }> {
   const config = getSocialConfig();
   const syncedAt = new Date().toISOString();
@@ -65,7 +75,7 @@ async function syncChannel(
         posts,
         meta: {
           postCount: posts.length,
-          followers,
+          followers: resolveFollowerCount(followers, previousFollowers),
           provider: "apify",
           dataSource: "live",
           syncedAt,
@@ -82,7 +92,7 @@ async function syncChannel(
         posts,
         meta: {
           postCount: posts.length,
-          followers,
+          followers: resolveFollowerCount(followers, previousFollowers),
           provider: "apify",
           dataSource: "live",
           syncedAt,
@@ -99,7 +109,7 @@ async function syncChannel(
         posts,
         meta: {
           postCount: posts.length,
-          followers,
+          followers: resolveFollowerCount(followers, previousFollowers),
           provider: "apify",
           dataSource: "live",
           syncedAt,
@@ -116,7 +126,7 @@ async function syncChannel(
         posts,
         meta: {
           postCount: posts.length,
-          followers,
+          followers: resolveFollowerCount(followers, previousFollowers),
           provider: "apify",
           dataSource: "live",
           syncedAt,
@@ -144,13 +154,17 @@ export async function mergeChannelIntoSocialCache(
   };
 
   const otherPosts = existing.posts.filter((post) => post.platform !== channel);
+  const previousFollowers = existing.meta.channels?.[channel]?.followers;
   const cache: SocialPostCache = {
     meta: {
       syncedAt: new Date().toISOString(),
       companySlug: config.companySlug,
       channels: {
         ...existing.meta.channels,
-        [channel]: meta,
+        [channel]: {
+          ...meta,
+          followers: resolveFollowerCount(meta.followers, previousFollowers),
+        },
       },
     },
     posts: [...otherPosts, ...posts].sort(
@@ -175,6 +189,7 @@ export async function bootstrapSocialCacheFromLinkedIn(): Promise<SocialPostCach
       channels: {
         linkedin: {
           postCount: linkedInCache.posts.length,
+          followers: linkedInCache.meta.followers,
           provider: linkedInCache.meta.provider,
           dataSource:
             linkedInCache.meta.provider === "seed" ? "seed" : "live",
@@ -224,7 +239,12 @@ export async function syncSocialPosts(
         );
       }
 
-      const result = await syncChannel(channel, token, config.maxPosts);
+      const result = await syncChannel(
+        channel,
+        token,
+        config.maxPosts,
+        existingCache?.meta.channels?.[channel]?.followers
+      );
       return { channel, ...result };
     })
   );
@@ -234,7 +254,14 @@ export async function syncSocialPosts(
     const result = results[i];
 
     if (result.status === "fulfilled") {
-      channelMeta[channel] = result.value.meta;
+      const previousFollowers = existingCache?.meta.channels?.[channel]?.followers;
+      channelMeta[channel] = {
+        ...result.value.meta,
+        followers: resolveFollowerCount(
+          result.value.meta.followers,
+          previousFollowers
+        ),
+      };
       allPosts.push(...result.value.posts);
     } else {
       const message =

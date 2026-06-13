@@ -1,4 +1,4 @@
-import { engagementRate } from "@/lib/metrics";
+import { clickThroughRate, engagementRate } from "@/lib/metrics";
 import {
   ANALYTICS_CHANNEL_PLATFORMS,
   ANALYTICS_CHANNELS,
@@ -27,6 +27,9 @@ export function buildChannelSummary(
   const avgEngagementRate =
     platformPosts.reduce((sum, p) => sum + engagementRate(p.metrics), 0) /
     (platformPosts.length || 1);
+  const avgCTR =
+    platformPosts.reduce((sum, p) => sum + clickThroughRate(p.metrics), 0) /
+    (platformPosts.length || 1);
 
   const growthRates: Record<Platform, number> = {
     linkedin: 4200,
@@ -45,6 +48,7 @@ export function buildChannelSummary(
     followerGrowth: growthRates[platform] ?? 0,
     postCount: platformPosts.length,
     avgEngagementRate: Math.round(avgEngagementRate * 10) / 10,
+    avgCTR: Math.round(avgCTR * 10) / 10,
     totalReach: platformPosts.reduce((s, p) => s + p.metrics.reach, 0),
     totalImpressions: platformPosts.reduce(
       (s, p) => s + p.metrics.impressions,
@@ -81,6 +85,12 @@ export function buildCrossChannelTotals(summaries: ChannelSummary[]) {
     avgEngagementRate:
       Math.round(
         (summaries.reduce((s, c) => s + c.avgEngagementRate, 0) /
+          (summaries.length || 1)) *
+          10
+      ) / 10,
+    avgCTR:
+      Math.round(
+        (summaries.reduce((s, c) => s + c.avgCTR, 0) /
           (summaries.length || 1)) *
           10
       ) / 10,
