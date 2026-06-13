@@ -1,5 +1,4 @@
 import type { NextAuthConfig } from "next-auth";
-import { getAuthSecret } from "@/lib/env";
 
 export const authConfig = {
   pages: {
@@ -9,7 +8,6 @@ export const authConfig = {
     strategy: "jwt",
   },
   trustHost: true,
-  secret: getAuthSecret(),
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;

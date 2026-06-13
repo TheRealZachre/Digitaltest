@@ -8,9 +8,9 @@ import { findUserById, upsertOAuthUser, verifyUserPassword } from "./users";
 
 export { googleEnabled };
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth(async () => ({
   ...authConfig,
-  secret: getAuthSecret(),
+  secret: await getAuthSecret(),
   providers: [
     ...(googleEnabled
       ? [
@@ -78,4 +78,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true;
     },
   },
-});
+}));

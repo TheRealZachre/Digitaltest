@@ -347,9 +347,7 @@ export async function requestPasswordReset(
 
   const record = await createPasswordResetToken(user.id);
   const baseUrl =
-    origin ??
-    getAuthUrl() ??
-    "http://localhost:3000";
+    origin ?? (await getAuthUrl()) ?? "http://localhost:3000";
   const resetUrl = buildPasswordResetUrl(baseUrl, record.token);
   const emailed = await sendPasswordResetEmail(user.email, resetUrl);
 
