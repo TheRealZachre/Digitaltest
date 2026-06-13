@@ -6,8 +6,12 @@ NEXTJS_ENV=development
 #   Deploy: npx opennextjs-cloudflare deploy
 # Or as a single step: npm run deploy
 
-# Required in production (set in Cloudflare dashboard → Settings → Variables)
-# AUTH_SECRET=generate-with-openssl-rand-base64-32
+# REQUIRED — set as encrypted Secrets in Cloudflare dashboard (Settings → Variables and Secrets)
+# Also add to Workers Builds → Build variables and secrets (same names)
+# Generate: openssl rand -base64 32
+# AUTH_SECRET=
 # AUTH_URL=https://your-worker.workers.dev
+
+# Optional
 # OPENAI_API_KEY=
 # TRANSCRIPTION_PROVIDER=openai

@@ -9,6 +9,7 @@ import {
   sendPasswordResetEmail,
 } from "./password-reset";
 import { resolveRoleForEmail } from "./roles";
+import { getAuthUrl } from "@/lib/env";
 import type { PublicUser, UserRecord, UserRole, UsersDatabase } from "./types";
 
 const USERS_FILE = "users.json";
@@ -347,8 +348,7 @@ export async function requestPasswordReset(
   const record = await createPasswordResetToken(user.id);
   const baseUrl =
     origin ??
-    process.env.AUTH_URL ??
-    process.env.NEXTAUTH_URL ??
+    getAuthUrl() ??
     "http://localhost:3000";
   const resetUrl = buildPasswordResetUrl(baseUrl, record.token);
   const emailed = await sendPasswordResetEmail(user.email, resetUrl);
