@@ -19,13 +19,15 @@ export const authConfig = {
         pathname.startsWith("/forgot-password") ||
         pathname.startsWith("/reset-password");
       const isAuthApi = pathname.startsWith("/api/auth");
+      const isPublicApi =
+        isAuthApi || pathname.startsWith("/api/health");
       const isAdminRoute =
         pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
       const isStaticAsset =
         pathname.startsWith("/brand") ||
         /\.(?:svg|png|jpg|jpeg|gif|webp|ico)$/.test(pathname);
 
-      if (isAuthApi || isStaticAsset) return true;
+      if (isPublicApi || isStaticAsset) return true;
 
       if (isAuthRoute) {
         if (isLoggedIn) {

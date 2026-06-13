@@ -1,16 +1,14 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import { getAuthSecret } from "@/lib/env";
 import { authConfig } from "./auth.config";
 import { googleEnabled } from "./constants";
 import { findUserById, upsertOAuthUser, verifyUserPassword } from "./users";
 
 export { googleEnabled };
 
-export const { handlers, auth, signIn, signOut } = NextAuth(async () => ({
+export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  secret: await getAuthSecret(),
   providers: [
     ...(googleEnabled
       ? [
@@ -78,4 +76,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => ({
       return true;
     },
   },
-}));
+});
