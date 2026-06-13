@@ -24,3 +24,19 @@ export function isCloudflareBuild(): boolean {
 
   return false;
 }
+
+/** True when executing inside a Cloudflare Worker (not local Node). */
+export function isCloudflareWorkersRuntime(): boolean {
+  if (
+    process.env.CLOUDFLARE_WORKERS === "1" ||
+    process.env.CF_PAGES === "1"
+  ) {
+    return true;
+  }
+
+  if (typeof navigator !== "undefined") {
+    return /Cloudflare-Workers/i.test(navigator.userAgent);
+  }
+
+  return false;
+}

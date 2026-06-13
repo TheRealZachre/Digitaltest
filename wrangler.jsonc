@@ -19,5 +19,8 @@
   ],
   "observability": {
     "enabled": true
+  },
+  "vars": {
+    "CLOUDFLARE_WORKERS": "1"
   }
 }
