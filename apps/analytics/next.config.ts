@@ -1,21 +1,50 @@
 import type { NextConfig } from "next";
+import { loadEnvConfig } from "@next/env";
 import path from "path";
+import { fileURLToPath } from "url";
 
-const repoRoot = path.join(__dirname, "../..");
+const configDir = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(configDir, "../..");
 const sharedSrc = path.join(repoRoot, "src");
+const localSrc = path.join(configDir, "src");
 
-const localSrc = path.join(__dirname, "src");
+// Share root .env.local with the analytics app (AUTH_SECRET, API keys, etc.)
+loadEnvConfig(repoRoot);
+
+const isCloudflareBuild =
+  process.env.CF_PAGES === "1" ||
+  process.env.OPENNEXT_CLOUDFLARE === "1";
+
+const cloudflareNativeStubAliases = isCloudflareBuild
+  ? {
+      "@xenova/transformers": "./src/lib/youtube/stubs/transformers-stub.ts",
+      "ffmpeg-static": "./src/lib/youtube/stubs/ffmpeg-static-stub.ts",
+      "onnxruntime-node": "./src/lib/youtube/stubs/empty-stub.ts",
+    }
+  : undefined;
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: [
+    "ffmpeg-static",
+    "@xenova/transformers",
+    "onnxruntime-node",
+  ],
   turbopack: {
+    root: repoRoot,
     resolveAlias: {
       "@": sharedSrc,
       "@analytics": localSrc,
+      ...(cloudflareNativeStubAliases ?? {}),
     },
   },
   webpack: (config) => {
-    config.resolve.alias["@"] = sharedSrc;
-    config.resolve.alias["@analytics"] = localSrc;
+    config.resolve ??= {};
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@": sharedSrc,
+      "@analytics": localSrc,
+      ...(cloudflareNativeStubAliases ?? {}),
+    };
     return config;
   },
   experimental: {

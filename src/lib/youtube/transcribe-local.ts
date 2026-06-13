@@ -1,15 +1,18 @@
 import { readFile } from "fs/promises";
-import { pipeline } from "@xenova/transformers";
 import { WaveFile } from "wavefile";
 
-let transcriberPromise: ReturnType<typeof pipeline> | null = null;
+type LocalTranscriber = (
+  audio: Float32Array,
+  options?: { chunk_length_s?: number; stride_length_s?: number }
+) => Promise<{ text?: string } | string>;
 
-function getLocalTranscriber() {
+let transcriberPromise: Promise<LocalTranscriber> | null = null;
+
+async function getLocalTranscriber(): Promise<LocalTranscriber> {
   if (!transcriberPromise) {
-    transcriberPromise = pipeline(
-      "automatic-speech-recognition",
-      "Xenova/whisper-tiny.en"
-    );
+    transcriberPromise = import("@xenova/transformers").then(({ pipeline }) =>
+      pipeline("automatic-speech-recognition", "Xenova/whisper-tiny.en")
+    ) as Promise<LocalTranscriber>;
   }
   return transcriberPromise;
 }
@@ -30,13 +33,8 @@ function loadWavSamples(buffer: Buffer): Float32Array {
     : Float32Array.from(mono as ArrayLike<number>);
 }
 
-type LocalTranscriber = (
-  audio: Float32Array,
-  options?: { chunk_length_s?: number; stride_length_s?: number }
-) => Promise<{ text?: string } | string>;
-
 export async function transcribeLocalWavFile(wavPath: string): Promise<string> {
-  const transcriber = (await getLocalTranscriber()) as LocalTranscriber;
+  const transcriber = await getLocalTranscriber();
   const buffer = await readFile(wavPath);
   const audioData = loadWavSamples(buffer);
 

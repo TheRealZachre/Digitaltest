@@ -1,5 +1,17 @@
 import type { NextConfig } from "next";
 
+const isCloudflareBuild =
+  process.env.CF_PAGES === "1" ||
+  process.env.OPENNEXT_CLOUDFLARE === "1";
+
+const cloudflareNativeStubAliases = isCloudflareBuild
+  ? {
+      "@xenova/transformers": "./src/lib/youtube/stubs/transformers-stub.ts",
+      "ffmpeg-static": "./src/lib/youtube/stubs/ffmpeg-static-stub.ts",
+      "onnxruntime-node": "./src/lib/youtube/stubs/empty-stub.ts",
+    }
+  : undefined;
+
 const nextConfig: NextConfig = {
   serverExternalPackages: [
     "ffmpeg-static",
@@ -9,6 +21,21 @@ const nextConfig: NextConfig = {
   experimental: {
     proxyClientMaxBodySize: "5gb",
   },
+  ...(cloudflareNativeStubAliases
+    ? {
+        turbopack: {
+          resolveAlias: cloudflareNativeStubAliases,
+        },
+        webpack: (config) => {
+          config.resolve ??= {};
+          config.resolve.alias = {
+            ...config.resolve.alias,
+            ...cloudflareNativeStubAliases,
+          };
+          return config;
+        },
+      }
+    : {}),
   images: {
     remotePatterns: [
       {
@@ -56,3 +83,9 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+if (process.env.NODE_ENV !== "production") {
+  void import("@opennextjs/cloudflare").then((m) =>
+    m.initOpenNextCloudflareForDev()
+  );
+}

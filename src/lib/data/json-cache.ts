@@ -27,6 +27,8 @@ function usesEphemeralCache(): boolean {
     process.env.VERCEL_ENV !== undefined ||
     process.env.AWS_LAMBDA_FUNCTION_NAME !== undefined ||
     process.env.LAMBDA_TASK_ROOT !== undefined ||
+    process.env.CF_PAGES === "1" ||
+    process.env.WORKERS_CI === "1" ||
     cwd.startsWith("/var/task")
   );
 }

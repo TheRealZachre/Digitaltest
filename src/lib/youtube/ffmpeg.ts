@@ -1,6 +1,5 @@
 import { execFile } from "child_process";
 import { access } from "fs/promises";
-import ffmpegStatic from "ffmpeg-static";
 import { promisify } from "util";
 
 const execFileAsync = promisify(execFile);
@@ -9,6 +8,9 @@ let cachedPath: string | null | undefined;
 
 export async function getFfmpegPath(): Promise<string | null> {
   if (cachedPath !== undefined) return cachedPath;
+
+  const ffmpegStaticModule = await import("ffmpeg-static");
+  const ffmpegStatic = ffmpegStaticModule.default;
 
   if (ffmpegStatic) {
     try {
