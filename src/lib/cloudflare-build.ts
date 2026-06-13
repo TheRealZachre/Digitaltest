@@ -11,9 +11,11 @@ export function isCloudflareBuild(): boolean {
     return true;
   }
 
-  // Cloudflare Workers Builds sets CI=true without CF_PAGES.
+  // Cloudflare Workers Builds sets CI=true or CI=1 without CF_PAGES.
   if (
-    process.env.CI === "true" &&
+    process.env.CI &&
+    process.env.CI !== "false" &&
+    process.env.CI !== "0" &&
     !process.env.VERCEL &&
     !process.env.NETLIFY
   ) {

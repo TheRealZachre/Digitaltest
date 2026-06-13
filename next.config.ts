@@ -1,5 +1,26 @@
 import type { NextConfig } from "next";
-import { isCloudflareBuild } from "./src/lib/cloudflare-build";
+
+function isCloudflareBuild(): boolean {
+  if (
+    process.env.OPENNEXT_CLOUDFLARE === "1" ||
+    process.env.CF_PAGES === "1" ||
+    process.env.WORKERS_CI === "1"
+  ) {
+    return true;
+  }
+
+  if (
+    process.env.CI &&
+    process.env.CI !== "false" &&
+    process.env.CI !== "0" &&
+    !process.env.VERCEL &&
+    !process.env.NETLIFY
+  ) {
+    return true;
+  }
+
+  return false;
+}
 
 const cloudflareNativeStubAliases = isCloudflareBuild()
   ? {
