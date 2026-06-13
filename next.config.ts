@@ -78,6 +78,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "**.twimg.com",
       },
+      const nextConfig = {
+  serverExternalPackages: ["onnxruntime-node"],
+  // ... your other existing config
+};
+
     ],
   },
 };
