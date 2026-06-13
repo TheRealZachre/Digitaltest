@@ -2,32 +2,30 @@
 NEXTJS_ENV=development
 
 # =============================================================================
-# Cloudflare Workers Builds (CI deploy)
+# Fastest fix (one command, after wrangler login):
+#   npx wrangler login
+#   npm run setup:cloudflare
 # =============================================================================
-# Build command:  npm run build:cloudflare
-# Deploy command:  npm run deploy:cloudflare
+
+# =============================================================================
+# Cloudflare Workers Builds — recommended dashboard settings
+# =============================================================================
+# Option A (simplest): set runtime secret once, keep default deploy command
+#   1. Dashboard → digitaltest → Settings → Variables and Secrets
+#   2. Add → Secret → AUTH_SECRET = output of: openssl rand -base64 32
+#   3. Build command:  npm run build:cloudflare
+#   4. Deploy command: npx wrangler deploy
 #
-# Add AUTH_SECRET as a BUILD SECRET (not a plain build variable):
-#   Workers & Pages → digitaltest → Settings → Builds
-#   → Build variables and secrets → Add → Secret → name: AUTH_SECRET
+# Option B (secret in CI build env):
+#   1. Dashboard → digitaltest → Settings → Builds → Build variables and secrets
+#   2. Add → Secret → AUTH_SECRET
+#   3. Build command:  npm run ci:cloudflare
+#   4. Deploy command: echo "deployed in build step"
 #
-# Generate a value locally:
-#   openssl rand -base64 32
-#
-# The deploy script uploads it to the worker via wrangler --secrets-file.
 # Do NOT use the manual node_modules stubbing bash build command.
 
-# =============================================================================
-# Alternative: set on the worker directly (manual deploy / one-time setup)
-# =============================================================================
-# Workers & Pages → digitaltest → Settings → Variables and Secrets
-# → Add → Secret → AUTH_SECRET
-#
-# Optional:
-# AUTH_URL=https://your-worker.workers.dev
-
 # AUTH_SECRET=
-# AUTH_URL=
+# AUTH_URL=https://your-worker.workers.dev
 
 # Optional API keys
 # OPENAI_API_KEY=

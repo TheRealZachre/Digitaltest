@@ -19,8 +19,5 @@
   },
   "vars": {
     "CLOUDFLARE_WORKERS": "1"
-  },
-  "secrets": {
-    "required": ["AUTH_SECRET"]
   }
 }
