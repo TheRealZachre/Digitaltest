@@ -1,21 +1,34 @@
 # Copy to .dev.vars for local OpenNext/Wrangler preview (do not commit .dev.vars)
 NEXTJS_ENV=development
 
-# --- Cloudflare dashboard setup (REQUIRED before deploy succeeds) ---
-# 1. Workers & Pages → digitaltest → Settings → Variables and Secrets
-# 2. Add encrypted Secret: AUTH_SECRET = output of `openssl rand -base64 32`
-# 3. (Optional) Add encrypted Secret: AUTH_URL = https://your-worker.workers.dev
+# =============================================================================
+# Cloudflare Workers Builds (CI deploy)
+# =============================================================================
+# Build command:  npm run build:cloudflare
+# Deploy command:  npm run deploy:cloudflare
 #
-# Build/deploy commands (Workers Builds):
-#   Build:  npm run build:cloudflare
-#   Deploy: npx wrangler deploy
-# Or single step: npm run deploy
+# Add AUTH_SECRET as a BUILD SECRET (not a plain build variable):
+#   Workers & Pages → digitaltest → Settings → Builds
+#   → Build variables and secrets → Add → Secret → name: AUTH_SECRET
 #
-# Do NOT use the manual node_modules stubbing bash command.
+# Generate a value locally:
+#   openssl rand -base64 32
+#
+# The deploy script uploads it to the worker via wrangler --secrets-file.
+# Do NOT use the manual node_modules stubbing bash build command.
 
-# AUTH_SECRET=
+# =============================================================================
+# Alternative: set on the worker directly (manual deploy / one-time setup)
+# =============================================================================
+# Workers & Pages → digitaltest → Settings → Variables and Secrets
+# → Add → Secret → AUTH_SECRET
+#
+# Optional:
 # AUTH_URL=https://your-worker.workers.dev
 
-# Optional
+# AUTH_SECRET=
+# AUTH_URL=
+
+# Optional API keys
 # OPENAI_API_KEY=
 # TRANSCRIPTION_PROVIDER=openai
