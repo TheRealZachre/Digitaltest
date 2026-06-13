@@ -80,11 +80,12 @@ export default async function ChannelReportPage({ params }: ChannelPageProps) {
               <h2 className="font-semibold text-slate-900">
                 {channelSummary.label} performance
               </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                {channelSummary.dataSource === "live"
-                  ? `Connected via live Apify sync for ${channelSummary.label}.`
-                  : "Representative seed data — run Pull Latest Data to connect this channel."}
-              </p>
+              {channelSummary.dataSource !== "live" && (
+                <p className="mt-1 text-sm text-slate-500">
+                  Representative seed data — run Pull Latest Data to connect this
+                  channel.
+                </p>
+              )}
             </div>
             <span
               className={`rounded-full px-3 py-1 text-xs font-medium ${
