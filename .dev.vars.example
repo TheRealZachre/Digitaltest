@@ -1,6 +1,11 @@
 # Copy to .dev.vars for local OpenNext/Wrangler preview (do not commit .dev.vars)
 NEXTJS_ENV=development
 
+# Cloudflare Workers Builds — use these commands (do NOT manually stub node_modules):
+#   Build:  npm run build:cloudflare
+#   Deploy: npx opennextjs-cloudflare deploy
+# Or as a single step: npm run deploy
+
 # Required in production (set in Cloudflare dashboard → Settings → Variables)
 # AUTH_SECRET=generate-with-openssl-rand-base64-32
 # AUTH_URL=https://your-worker.workers.dev
