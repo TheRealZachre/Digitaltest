@@ -1,14 +1,18 @@
 # Copy to .dev.vars for local OpenNext/Wrangler preview (do not commit .dev.vars)
 NEXTJS_ENV=development
 
-# Cloudflare Workers Builds — use these commands (do NOT manually stub node_modules):
+# --- Cloudflare dashboard setup (REQUIRED before deploy succeeds) ---
+# 1. Workers & Pages → digitaltest → Settings → Variables and Secrets
+# 2. Add encrypted Secret: AUTH_SECRET = output of `openssl rand -base64 32`
+# 3. (Optional) Add encrypted Secret: AUTH_URL = https://your-worker.workers.dev
+#
+# Build/deploy commands (Workers Builds):
 #   Build:  npm run build:cloudflare
-#   Deploy: npx opennextjs-cloudflare deploy
-# Or as a single step: npm run deploy
+#   Deploy: npx wrangler deploy
+# Or single step: npm run deploy
+#
+# Do NOT use the manual node_modules stubbing bash command.
 
-# REQUIRED — set as encrypted Secrets in Cloudflare dashboard (Settings → Variables and Secrets)
-# Also add to Workers Builds → Build variables and secrets (same names)
-# Generate: openssl rand -base64 32
 # AUTH_SECRET=
 # AUTH_URL=https://your-worker.workers.dev
 

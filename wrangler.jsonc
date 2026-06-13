@@ -24,6 +24,6 @@
     "CLOUDFLARE_WORKERS": "1"
   },
   "secrets": {
-    "required": ["AUTH_SECRET", "AUTH_URL"]
+    "required": ["AUTH_SECRET"]
   }
 }
