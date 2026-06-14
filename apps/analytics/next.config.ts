@@ -8,20 +8,40 @@ const configDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(configDir, "../..");
 const sharedSrc = path.join(repoRoot, "src");
 const localSrc = path.join(configDir, "src");
+const stubRoot = path.join(sharedSrc, "lib/youtube/stubs");
 
 loadDevVars(repoRoot);
-// Share root .env.local with the analytics app (AUTH_SECRET, API keys, etc.)
 loadEnvConfig(repoRoot);
 
-const isCloudflareBuild =
-  process.env.CF_PAGES === "1" ||
-  process.env.OPENNEXT_CLOUDFLARE === "1";
+function isCloudflareBuild(): boolean {
+  if (
+    process.env.OPENNEXT_CLOUDFLARE === "1" ||
+    process.env.CF_PAGES === "1" ||
+    process.env.WORKERS_CI === "1"
+  ) {
+    return true;
+  }
 
-const cloudflareNativeStubAliases = isCloudflareBuild
+  if (
+    process.env.CI &&
+    process.env.CI !== "false" &&
+    process.env.CI !== "0" &&
+    !process.env.VERCEL &&
+    !process.env.NETLIFY
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+const isCloudflareBuildEnv = isCloudflareBuild();
+
+const cloudflareNativeStubAliases = isCloudflareBuildEnv
   ? {
-      "@xenova/transformers": "./src/lib/youtube/stubs/transformers-stub.ts",
-      "ffmpeg-static": "./src/lib/youtube/stubs/ffmpeg-static-stub.ts",
-      "onnxruntime-node": "./src/lib/youtube/stubs/empty-stub.ts",
+      "@xenova/transformers": path.join(stubRoot, "transformers-stub.ts"),
+      "ffmpeg-static": path.join(stubRoot, "ffmpeg-static-stub.ts"),
+      "onnxruntime-node": path.join(stubRoot, "empty-stub.ts"),
     }
   : undefined;
 
@@ -69,3 +89,9 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+if (process.env.NODE_ENV !== "production") {
+  void import("@opennextjs/cloudflare").then((m) =>
+    m.initOpenNextCloudflareForDev()
+  );
+}

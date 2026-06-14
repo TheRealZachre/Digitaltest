@@ -19,6 +19,41 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Analytics-only app (separate URL)
+
+Social reporting lives in `apps/analytics` — a slim dashboard (overview, channel reports, weekly/monthly/quarterly exports) without the other product modules.
+
+```bash
+# Local — analytics on port 3001
+npm run dev:analytics
+
+# Both main + analytics
+npm run dev:all
+```
+
+### Deploy analytics to Cloudflare
+
+The analytics app deploys as a **separate Worker** (`digitaltest-analytics`) with its own URL, e.g. `https://digitaltest-analytics.<account>.workers.dev`.
+
+```bash
+# Build + deploy analytics worker
+npm run deploy:analytics
+
+# Or CI-style (Workers Builds build command)
+npm run ci:cloudflare:analytics
+```
+
+Set the same `AUTH_SECRET` on the analytics worker as the main app. Optionally point the main dashboard at the analytics URL:
+
+```bash
+# Main app — sidebar links + /reports redirects go to analytics
+ANALYTICS_APP_URL=https://digitaltest-analytics.your-subdomain.workers.dev
+NEXT_PUBLIC_ANALYTICS_URL=https://digitaltest-analytics.your-subdomain.workers.dev
+
+# Analytics worker — auth callbacks for that host
+AUTH_URL=https://digitaltest-analytics.your-subdomain.workers.dev
+```
+
 ## Tech Stack
 
 - Next.js 16 (App Router)

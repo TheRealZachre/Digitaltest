@@ -42,6 +42,11 @@ import {
 import clsx from "clsx";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { UserMenu } from "@/components/auth/UserMenu";
+import {
+  analyticsHref,
+  getAnalyticsAppUrl,
+  isExternalAnalyticsUrl,
+} from "@/lib/analytics-app-url";
 import { PLATFORM_NAME } from "@/lib/company";
 
 interface NavLink {
@@ -279,6 +284,7 @@ function linkIsActive(pathname: string, href: string, exact?: boolean) {
 
 export function Sidebar({ showAdminNav = false }: { showAdminNav?: boolean }) {
   const pathname = usePathname();
+  const analyticsAppUrl = getAnalyticsAppUrl();
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(
       navSections.map((section) => [section.id, section.isActive(pathname)])
@@ -372,18 +378,39 @@ export function Sidebar({ showAdminNav = false }: { showAdminNav?: boolean }) {
               {isOpen && (
                 <div className="ml-5 mt-1 space-y-0.5 border-l border-brand-border pl-3">
                   {section.links.map(({ href, label, icon: Icon, exact }) => {
-                    const active = linkIsActive(pathname, href, exact);
+                    const resolvedHref =
+                      section.id === "analytics"
+                        ? analyticsHref(href, analyticsAppUrl)
+                        : href;
+                    const active =
+                      section.id === "analytics" && analyticsAppUrl
+                        ? false
+                        : linkIsActive(pathname, href, exact);
+                    const linkClassName = clsx(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      active
+                        ? "bg-brand-indigo/15 text-brand-indigo-bright"
+                        : "text-brand-muted hover:bg-white/5 hover:text-brand-off-white"
+                    );
+
+                    if (isExternalAnalyticsUrl(resolvedHref)) {
+                      return (
+                        <a
+                          key={href}
+                          href={resolvedHref}
+                          className={linkClassName}
+                        >
+                          <Icon className="h-3.5 w-3.5 shrink-0" />
+                          {label}
+                        </a>
+                      );
+                    }
 
                     return (
                       <Link
                         key={href}
-                        href={href}
-                        className={clsx(
-                          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                          active
-                            ? "bg-brand-indigo/15 text-brand-indigo-bright"
-                            : "text-brand-muted hover:bg-white/5 hover:text-brand-off-white"
-                        )}
+                        href={resolvedHref}
+                        className={linkClassName}
                       >
                         <Icon className="h-3.5 w-3.5 shrink-0" />
                         {label}
