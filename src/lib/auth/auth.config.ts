@@ -17,8 +17,8 @@ export const authConfig = {
       const { pathname, search } = nextUrl;
 
       if (
-        analyticsAppUrl &&
-        (pathname === "/methodology" || pathname.startsWith("/reports"))
+        pathname === "/methodology" ||
+        pathname.startsWith("/reports")
       ) {
         return Response.redirect(
           new URL(`${pathname}${search}`, analyticsAppUrl)

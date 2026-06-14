@@ -45,7 +45,6 @@ import { UserMenu } from "@/components/auth/UserMenu";
 import {
   analyticsHref,
   getAnalyticsAppUrl,
-  isExternalAnalyticsUrl,
 } from "@/lib/analytics-app-url";
 import { PLATFORM_NAME } from "@/lib/company";
 
@@ -69,8 +68,7 @@ const navSections: NavSection[] = [
     id: "analytics",
     label: "Analytics",
     icon: FileBarChart,
-    isActive: (pathname) =>
-      pathname.startsWith("/reports") || pathname.startsWith("/methodology"),
+    isActive: () => false,
     links: [
       {
         href: "/reports/channels",
@@ -383,7 +381,7 @@ export function Sidebar({ showAdminNav = false }: { showAdminNav?: boolean }) {
                         ? analyticsHref(href, analyticsAppUrl)
                         : href;
                     const active =
-                      section.id === "analytics" && analyticsAppUrl
+                      section.id === "analytics"
                         ? false
                         : linkIsActive(pathname, href, exact);
                     const linkClassName = clsx(
@@ -393,28 +391,15 @@ export function Sidebar({ showAdminNav = false }: { showAdminNav?: boolean }) {
                         : "text-brand-muted hover:bg-white/5 hover:text-brand-off-white"
                     );
 
-                    if (isExternalAnalyticsUrl(resolvedHref)) {
-                      return (
-                        <a
-                          key={href}
-                          href={resolvedHref}
-                          className={linkClassName}
-                        >
-                          <Icon className="h-3.5 w-3.5 shrink-0" />
-                          {label}
-                        </a>
-                      );
-                    }
-
                     return (
-                      <Link
+                      <a
                         key={href}
                         href={resolvedHref}
                         className={linkClassName}
                       >
                         <Icon className="h-3.5 w-3.5 shrink-0" />
                         {label}
-                      </Link>
+                      </a>
                     );
                   })}
                 </div>
