@@ -20,6 +20,7 @@
   "vars": {
     "CLOUDFLARE_WORKERS": "1",
     "NEXT_PUBLIC_ANALYTICS_URL": "https://digitaltest-analytics.zach-a56.workers.dev",
-    "ANALYTICS_APP_URL": "https://digitaltest-analytics.zach-a56.workers.dev"
+    "ANALYTICS_APP_URL": "https://digitaltest-analytics.zach-a56.workers.dev",
+    "AUTH_ADMIN_EMAILS": "zach@zachre.com,zach@everythingandanythingpodcast.com"
   }
 }
