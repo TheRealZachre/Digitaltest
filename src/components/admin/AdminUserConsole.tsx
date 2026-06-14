@@ -7,7 +7,13 @@ import type { PublicUser, UserRole } from "@/lib/auth/types";
 const inputClassName =
   "mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-brand-ink outline-none focus:border-brand-indigo focus:ring-2 focus:ring-brand-indigo/20";
 
-export function AdminUserConsole({ initialUsers }: { initialUsers: PublicUser[] }) {
+export function AdminUserConsole({
+  initialUsers,
+  scope = "platform",
+}: {
+  initialUsers: PublicUser[];
+  scope?: "platform" | "analytics";
+}) {
   const [users, setUsers] = useState(initialUsers);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -17,6 +23,21 @@ export function AdminUserConsole({ initialUsers }: { initialUsers: PublicUser[] 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const createTitle =
+    scope === "analytics"
+      ? "Create analytics user account"
+      : "Create user account";
+  const createDescription =
+    scope === "analytics"
+      ? "Grant access to BeOne Analytics reports and data sync. These credentials are separate from the main platform."
+      : "Set a username and password so someone can sign in immediately.";
+  const usersTitle =
+    scope === "analytics" ? "Analytics users" : "Existing users";
+  const usersDescription =
+    scope === "analytics"
+      ? `${users.length} analytics account${users.length === 1 ? "" : "s"} — independent from platform logins.`
+      : `${users.length} account${users.length === 1 ? "" : "s"} in the system.`;
 
   const refreshUsers = useCallback(async () => {
     const response = await fetch("/api/admin/users");
@@ -76,11 +97,9 @@ export function AdminUserConsole({ initialUsers }: { initialUsers: PublicUser[] 
           </div>
           <div>
             <h2 className="text-lg font-semibold text-slate-900">
-              Create user account
+              {createTitle}
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Set a username and password so someone can sign in immediately.
-            </p>
+            <p className="mt-1 text-sm text-slate-500">{createDescription}</p>
           </div>
         </div>
 
@@ -170,11 +189,9 @@ export function AdminUserConsole({ initialUsers }: { initialUsers: PublicUser[] 
           </div>
           <div>
             <h2 className="text-lg font-semibold text-slate-900">
-              Existing users
+              {usersTitle}
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              {users.length} account{users.length === 1 ? "" : "s"} in the system.
-            </p>
+            <p className="mt-1 text-sm text-slate-500">{usersDescription}</p>
           </div>
         </div>
 

@@ -339,7 +339,7 @@ export function Sidebar({ showAdminNav = false }: { showAdminNav?: boolean }) {
             )}
           >
             <Shield className="h-4 w-4 shrink-0" />
-            Admin Console
+            Platform Admin
           </Link>
         )}
 
@@ -402,6 +402,15 @@ export function Sidebar({ showAdminNav = false }: { showAdminNav?: boolean }) {
                       </a>
                     );
                   })}
+                  {section.id === "analytics" && showAdminNav && (
+                    <a
+                      href={analyticsHref("/admin", analyticsAppUrl)}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-brand-muted transition-colors hover:bg-white/5 hover:text-brand-off-white"
+                    >
+                      <Shield className="h-3.5 w-3.5 shrink-0" />
+                      Analytics Admin
+                    </a>
+                  )}
                 </div>
               )}
             </div>
