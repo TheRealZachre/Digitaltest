@@ -29,7 +29,7 @@ export async function searchMediaMonitor(
   const sourcesUsed = ["Google News RSS", "Bing News RSS"];
   if (config.newsApiKey) sourcesUsed.push("NewsAPI");
   if (includeCached) sourcesUsed.push("Synced social channels");
-  if (config.apifyToken) sourcesUsed.push("X search (Apify)");
+  if (config.apifyToken) sourcesUsed.push("X search");
 
   const errors: Record<string, string> = {};
   if (newsResult.errors.length > 0) {

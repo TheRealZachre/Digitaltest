@@ -1,4 +1,5 @@
 import { formatChannelList } from "@/lib/analytics/channel-selection";
+import { formatDisplayProvider } from "@/lib/format-display-provider";
 import type { Platform } from "@/lib/types";
 
 interface ReportDataBannerProps {
@@ -19,12 +20,13 @@ export function ReportDataBanner({
   const channelScope = selectedChannels
     ? formatChannelList(selectedChannels)
     : "all channels";
+  const providerLabel = formatDisplayProvider(provider);
 
   return (
     <p className="rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
       {timeframe} report for <strong>{companyName}</strong> — {postCount}{" "}
       {postCount === 1 ? "post" : "posts"} from {channelScope}
-      {provider ? ` (${provider})` : ""}. Metrics include reactions, comments,
+      {providerLabel ? ` (${providerLabel})` : ""}. Metrics include reactions, comments,
       and reposts from public posts.
     </p>
   );

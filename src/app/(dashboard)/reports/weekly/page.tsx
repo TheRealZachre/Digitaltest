@@ -1,4 +1,4 @@
-import { format, subDays } from "date-fns";
+import { format, subDays, subMilliseconds } from "date-fns";
 import { Header } from "@/components/layout/Header";
 import { DataSyncPanel } from "@/components/dashboard/DataSyncPanel";
 import { ReportDataBanner } from "@/components/dashboard/ReportDataBanner";
@@ -6,13 +6,13 @@ import { ExportButtons } from "@/components/dashboard/ExportButtons";
 import { ReportStats } from "@/components/dashboard/ReportStats";
 import { ReportPostsGrid } from "@/components/dashboard/ReportPostsGrid";
 import { NarrativeSection } from "@/components/narrative/NarrativeSection";
-import { WeeklyPerformancePanel } from "@/components/narrative/WeeklyPerformancePanel";
-import { groupByWeek } from "@/lib/narrative/aggregate";
+import { WeekComparisonPanel } from "@/components/narrative/WeekComparisonPanel";
+import { groupByWeek, summarizeWeekBuckets } from "@/lib/narrative/aggregate";
 import { getSelectedAnalyticsChannels } from "@/lib/analytics/channel-selection.server";
 import {
-  monthRowFromBucket,
+  periodFromSummary,
   weekRowsFromBuckets,
-} from "@/lib/export-pptx";
+} from "@/lib/export-pptx-types";
 import {
   buildReportSummary,
   getAllPosts,
@@ -30,22 +30,29 @@ export default async function WeeklyReportPage() {
   const allPosts = await getAllPosts();
   const posts = await getPostsForTimeframe("weekly");
   const summary = buildReportSummary(posts);
-  const start = subDays(new Date(), 7);
+  const now = new Date();
+  const currentStart = subDays(now, 7);
+  const priorStart = subDays(now, 14);
+  const priorEnd = currentStart;
 
   const priorWeekPosts = allPosts.filter((p) => {
     const d = new Date(p.publishedAt);
-    return d >= subDays(new Date(), 14) && d < start;
+    return d >= priorStart && d < priorEnd;
   });
 
   const currentWeeks = groupByWeek(posts);
   const priorWeeks = groupByWeek(priorWeekPosts);
   const comparisonPosts = [...posts, ...priorWeekPosts];
+  const currentWeekSummary = summarizeWeekBuckets(currentWeeks);
+  const priorWeekSummary = summarizeWeekBuckets(priorWeeks);
+  const currentDateRange = `${format(currentStart, "MMM d")} – ${format(now, "MMM d, yyyy")}`;
+  const priorDateRange = `${format(priorStart, "MMM d")} – ${format(subMilliseconds(priorEnd, 1), "MMM d, yyyy")}`;
 
   return (
     <>
       <Header
         title="Weekly Report"
-        subtitle={`${brand.name} · ${format(start, "MMM d")} – ${format(new Date(), "MMM d, yyyy")} · Rolling 7-day view`}
+        subtitle={`${brand.name} · ${currentDateRange} · Rolling 7-day view`}
         actions={
           <ExportButtons
             posts={comparisonPosts}
@@ -54,12 +61,22 @@ export default async function WeeklyReportPage() {
             pptxData={{
               timeframe: "weekly",
               title: "Weekly Social Media Report",
-              subtitle: `${brand.name} · ${format(start, "MMM d")} – ${format(new Date(), "MMM d, yyyy")}`,
+              subtitle: `${brand.name} · ${currentDateRange}`,
               brandName: brand.name,
               summary,
               posts,
               weeks: weekRowsFromBuckets(currentWeeks),
               priorWeeks: weekRowsFromBuckets(priorWeeks),
+              currentPeriod: periodFromSummary(
+                "Current week",
+                currentDateRange,
+                currentWeekSummary
+              ),
+              priorPeriod: periodFromSummary(
+                "Prior week",
+                priorDateRange,
+                priorWeekSummary
+              ),
             }}
           />
         }
@@ -79,17 +96,18 @@ export default async function WeeklyReportPage() {
           selectedChannels={selectedChannels}
         />
 
-        <WeeklyPerformancePanel
-          weeks={currentWeeks}
-          title="This week's performance"
+        <WeekComparisonPanel
+          current={{
+            weeks: currentWeeks,
+            dateRange: currentDateRange,
+            ...currentWeekSummary,
+          }}
+          prior={{
+            weeks: priorWeeks,
+            dateRange: priorDateRange,
+            ...priorWeekSummary,
+          }}
         />
-
-        {priorWeeks.length > 0 && (
-          <WeeklyPerformancePanel
-            weeks={priorWeeks}
-            title="Prior week comparison"
-          />
-        )}
 
         <NarrativeSection
           posts={comparisonPosts}

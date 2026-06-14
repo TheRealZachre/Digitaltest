@@ -1,5 +1,8 @@
 import { ReportPostsGrid } from "@/components/dashboard/ReportPostsGrid";
 import type { MonthBucket } from "@/lib/narrative/types";
+import { formatPercent } from "@/lib/metrics";
+import { engagementRateAxisMax } from "@/lib/narrative/chart-axis";
+import { PeriodMetricsChart } from "./PeriodMetricsChart";
 
 interface MonthComparisonPanelProps {
   current: MonthBucket;
@@ -10,46 +13,57 @@ export function MonthComparisonPanel({
   current,
   prior,
 }: MonthComparisonPanelProps) {
-  const scoreDelta =
-    prior.avgEngagementScore > 0
-      ? current.avgEngagementScore - prior.avgEngagementScore
+  const rateDelta =
+    prior.postCount > 0 && current.postCount > 0
+      ? Math.round((current.avgEngagementRate - prior.avgEngagementRate) * 10) /
+        10
       : 0;
-  const positive = scoreDelta >= 0;
+  const positive = rateDelta >= 0;
+  const maxEngagementRate = engagementRateAxisMax([
+    current.avgEngagementRate,
+    prior.avgEngagementRate,
+  ]);
 
   return (
     <section className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-            Current month
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 className="text-base font-semibold text-slate-900">
+          Current month vs prior month
+        </h3>
+        <p className="mt-1 text-sm text-slate-500">
+          Side-by-side engagement rate by month with date ranges
+        </p>
+
+        {prior.postCount > 0 && current.postCount > 0 && (
+          <p
+            className={`mt-3 text-sm font-medium ${positive ? "text-emerald-600" : "text-rose-600"}`}
+          >
+            {positive ? "+" : ""}
+            {formatPercent(rateDelta, 1)} engagement rate vs prior month
           </p>
-          <h3 className="mt-1 text-xl font-semibold text-slate-900">
-            {current.label}
-          </h3>
-          <p className="mt-2 text-sm text-slate-600">
-            {current.postCount} posts · avg engagement score{" "}
-            {current.avgEngagementScore}
-          </p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Prior month
-          </p>
-          <h3 className="mt-1 text-xl font-semibold text-slate-900">
-            {prior.label}
-          </h3>
-          <p className="mt-2 text-sm text-slate-600">
-            {prior.postCount} posts · avg engagement score{" "}
-            {prior.avgEngagementScore}
-          </p>
-          {prior.postCount > 0 && current.postCount > 0 && (
-            <p
-              className={`mt-2 text-sm font-medium ${positive ? "text-emerald-600" : "text-rose-600"}`}
-            >
-              {positive ? "+" : ""}
-              {scoreDelta} engagement score vs prior month
-            </p>
-          )}
+        )}
+
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          <PeriodMetricsChart
+            title="Current month"
+            dateRange={current.dateRange}
+            postCount={current.postCount}
+            avgEngagementScore={current.avgEngagementScore}
+            avgEngagementRate={current.avgEngagementRate}
+            maxEngagementRate={maxEngagementRate}
+            variant="current"
+            emptyMessage="No posts in the current month."
+          />
+          <PeriodMetricsChart
+            title="Prior month"
+            dateRange={prior.dateRange}
+            postCount={prior.postCount}
+            avgEngagementScore={prior.avgEngagementScore}
+            avgEngagementRate={prior.avgEngagementRate}
+            maxEngagementRate={maxEngagementRate}
+            variant="prior"
+            emptyMessage="No posts in the prior month."
+          />
         </div>
       </div>
 

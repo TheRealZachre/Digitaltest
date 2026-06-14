@@ -37,12 +37,17 @@ export interface WeekBucket {
   postCount: number;
   avgReactions: number;
   avgEngagementScore: number;
+  avgEngagementRate: number;
 }
 
 export interface MonthBucket {
   label: string;
   monthKey: string;
+  dateRange: string;
+  start: string;
+  end: string;
   posts: NarrativePost[];
   postCount: number;
   avgEngagementScore: number;
+  avgEngagementRate: number;
 }

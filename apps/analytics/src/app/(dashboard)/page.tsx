@@ -14,11 +14,12 @@ import { SpendPerformanceChart } from "@/components/dashboard/SpendPerformanceCh
 import { PostPreview } from "@/components/dashboard/PostPreview";
 import {
   buildReportSummary,
+  getAllPosts,
   getAudienceGrowth,
   getBrand,
   getMultiChannelPosts,
-  getPostsForTimeframe,
 } from "@/lib/data";
+import { getMonthPosts } from "@/lib/narrative/aggregate";
 import { rankByEngagement } from "@/lib/metrics";
 import { BrandSignalAnimated } from "@/components/brand/BrandSignalAnimated";
 import { PLATFORM_NAME, PLATFORM_TAGLINE } from "@/lib/company";
@@ -56,10 +57,19 @@ const reports = [
 export default async function HomePage() {
   const brand = await getBrand();
   const { meta, channelSources } = await getMultiChannelPosts();
-  const monthlyPosts = await getPostsForTimeframe("monthly");
-  const summary = buildReportSummary(monthlyPosts);
+  const allPosts = await getAllPosts();
+  const currentMonth = getMonthPosts(allPosts, 0);
+  const monthlyPosts = currentMonth.posts;
+  const audienceGrowth = await getAudienceGrowth();
+  const summary = {
+    ...buildReportSummary(monthlyPosts),
+    audienceGrowth:
+      audienceGrowth.length >= 2
+        ? audienceGrowth[audienceGrowth.length - 1].followers -
+          audienceGrowth[audienceGrowth.length - 2].followers
+        : 0,
+  };
   const topPosts = rankByEngagement(monthlyPosts).slice(0, 3);
-  const audienceGrowth = getAudienceGrowth();
 
   return (
     <>
@@ -120,21 +130,39 @@ export default async function HomePage() {
         </section>
 
         <section>
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">
-            Monthly Snapshot
-          </h2>
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Monthly Snapshot
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              {currentMonth.label} · {currentMonth.dateRange}
+            </p>
+          </div>
           <ReportStats summary={summary} />
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-2">
-          <AudienceGrowthChart data={audienceGrowth} />
+        <section>
+          <AudienceGrowthChart
+            data={audienceGrowth}
+            expanded
+            showYearOverYear
+          />
+        </section>
+
+        <section>
           <SpendPerformanceChart posts={monthlyPosts} />
         </section>
 
         <section>
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">
-            Top Performing Posts
-          </h2>
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Top Performing Posts
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Highest engagement in the last month · {currentMonth.label} ·{" "}
+              {currentMonth.dateRange}
+            </p>
+          </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {topPosts.map((post) => (
               <PostPreview key={post.id} post={post} />

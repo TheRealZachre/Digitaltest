@@ -3,7 +3,7 @@ export const MEDIA_MONITOR_TAGLINE =
   "Pull news coverage and major social posts for any subject";
 
 export const MEDIA_MONITOR_OVERVIEW =
-  "Enter a company, executive, product, or topic to aggregate recent news articles and high-engagement social posts. News is pulled from Google News and Bing News RSS feeds, with optional NewsAPI enrichment. Social results combine your synced channel posts with live X search when Apify is configured.";
+  "Enter a company, executive, product, or topic to aggregate recent news articles and high-engagement social posts. News is pulled from Google News and Bing News RSS feeds, with optional NewsAPI enrichment. Social results combine your synced channel posts with live X search when sync credentials are configured.";
 
 export const MEDIA_MONITOR_SOURCES = [
   {
@@ -19,6 +19,6 @@ export const MEDIA_MONITOR_SOURCES = [
   {
     title: "Live X search",
     description:
-      "Recent posts mentioning the subject via Apify tweet search when APIFY_TOKEN is set.",
+      "Recent posts mentioning the subject via live X search when sync credentials are set.",
   },
 ];

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Loader2, Search, Users, Video } from "lucide-react";
 import { SeoScoreBadge } from "./SeoScoreBadge";
 import type { ChannelAnalyzeResponse } from "@/lib/youtube/types";
+import { sanitizeUserFacingText } from "@/lib/format-display-provider";
 
 export function ChannelAnalyzer() {
   const [channelUrl, setChannelUrl] = useState("@beonemedicines");
@@ -46,9 +47,8 @@ export function ChannelAnalyzer() {
         <p className="mt-1 text-sm text-slate-500">
           Enter a channel URL or handle (e.g.{" "}
           <code className="rounded bg-slate-100 px-1">@beonemedicines</code>).
-          Pulls live channel avatars and video thumbnails via Apify (uses your{" "}
-          <code className="rounded bg-slate-100 px-1">APIFY_TOKEN</code>) or
-          the YouTube Data API when configured.
+          Pulls live channel avatars and video thumbnails when sync credentials
+          or the YouTube Data API are configured.
         </p>
 
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -73,7 +73,9 @@ export function ChannelAnalyzer() {
           </button>
         </div>
         {error && (
-          <p className="mt-3 text-sm text-rose-600">{error}</p>
+          <p className="mt-3 text-sm text-rose-600">
+            {sanitizeUserFacingText(error)}
+          </p>
         )}
       </form>
 
@@ -99,9 +101,9 @@ export function ChannelAnalyzer() {
                   <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
                     {result.source === "seed"
                       ? "demo data"
-                      : result.source === "apify"
-                        ? "live · Apify"
-                        : "live · YouTube API"}
+                      : result.source === "youtube-api"
+                        ? "live · YouTube API"
+                        : "live"}
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-slate-500">

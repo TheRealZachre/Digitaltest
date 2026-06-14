@@ -6,30 +6,42 @@ import { ChannelOverviewGrid } from "@/components/analytics/ChannelOverviewGrid"
 import { ChannelStatsRow } from "@/components/analytics/ChannelStatsRow";
 import { DataSyncPanel } from "@/components/dashboard/DataSyncPanel";
 import { ReportPostsGrid } from "@/components/dashboard/ReportPostsGrid";
-import { buildCrossChannelTotals } from "@/lib/analytics/summaries";
+import {
+  getAlignedMonthPeriodPosts,
+  getPostDateRangeLabel,
+} from "@/lib/analytics/periods";
+import {
+  buildCrossChannelActivityFromPosts,
+  buildCrossChannelTotals,
+  buildCrossChannelVolumeFromChannelSummaries,
+  buildMonthlyChannelSummaries,
+  filterPostsByPlatform,
+} from "@/lib/analytics/summaries";
 import { formatChannelList } from "@/lib/analytics/channel-selection";
 import {
   getBrand,
   getChannelSummaries,
   getAllPosts,
 } from "@/lib/data";
-import type { ChannelSummary } from "@/lib/types";
+import type { ChannelSummary, Platform } from "@/lib/types";
 
 function crossChannelAsSummary(
-  totals: ReturnType<typeof buildCrossChannelTotals>
+  followerTotals: ReturnType<typeof buildCrossChannelTotals>,
+  volume: ReturnType<typeof buildCrossChannelVolumeFromChannelSummaries>,
+  rates: ReturnType<typeof buildCrossChannelActivityFromPosts>
 ): ChannelSummary {
   return {
     platform: "linkedin",
-    label: totals.label,
-    handle: totals.handle,
-    followers: totals.followers,
-    followerGrowth: totals.followerGrowth,
-    postCount: totals.postCount,
-    avgEngagementRate: totals.avgEngagementRate,
-    avgCTR: totals.avgCTR,
-    totalReach: totals.totalReach,
-    totalImpressions: totals.totalImpressions,
-    totalSpend: totals.totalSpend,
+    label: followerTotals.label,
+    handle: followerTotals.handle,
+    followers: followerTotals.followers,
+    followerGrowth: followerTotals.followerGrowth,
+    postCount: volume.postCount,
+    avgEngagementRate: rates.avgEngagementRate,
+    avgCTR: rates.avgCTR,
+    totalReach: volume.totalReach,
+    totalImpressions: volume.totalImpressions,
+    totalSpend: followerTotals.totalSpend,
     dataSource: "live",
   };
 }
@@ -40,7 +52,38 @@ export default async function AllChannelsPage() {
     await getChannelSummaries();
   const posts = await getAllPosts();
   const liveChannelCount = channels.filter((c) => c.dataSource === "live").length;
-  const totals = buildCrossChannelTotals(channels);
+  const followerTotals = buildCrossChannelTotals(channels);
+
+  const { currentPosts, priorPosts, meta: alignedMeta } =
+    getAlignedMonthPeriodPosts(posts);
+  const currentPeriodChannels = buildMonthlyChannelSummaries(
+    channels,
+    currentPosts
+  );
+  const priorPeriodChannels = buildMonthlyChannelSummaries(
+    channels,
+    priorPosts
+  );
+  const currentVolume =
+    buildCrossChannelVolumeFromChannelSummaries(currentPeriodChannels);
+  const priorVolume =
+    buildCrossChannelVolumeFromChannelSummaries(priorPeriodChannels);
+  const currentRates = buildCrossChannelActivityFromPosts(currentPosts);
+  const priorRates = buildCrossChannelActivityFromPosts(priorPosts);
+
+  const channelSummary = crossChannelAsSummary(
+    followerTotals,
+    currentVolume,
+    currentRates
+  );
+  const channelPostDateRanges = Object.fromEntries(
+    currentPeriodChannels.map((channel) => [
+      channel.platform,
+      getPostDateRangeLabel(
+        filterPostsByPlatform(currentPosts, channel.platform)
+      ),
+    ])
+  ) as Partial<Record<Platform, string>>;
 
   return (
     <>
@@ -56,27 +99,56 @@ export default async function AllChannelsPage() {
           channelSources={channelSources}
         />
 
-        <section className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-6">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Full social picture
-          </h2>
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
-            Unified view across {formatChannelList(selectedChannels)}.
-            {liveChannelCount === channels.length
-              ? " All selected channels are connected via live Apify sync."
-              : ` ${liveChannelCount} of ${channels.length} selected channels are live — use Pull Latest Data to refresh.`}
-          </p>
+        <section className="overflow-visible rounded-xl border border-indigo-200 bg-indigo-50/50 p-6">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Social picture
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+              Unified view across {formatChannelList(selectedChannels)} for{" "}
+              {alignedMeta.currentDateRange} ({alignedMeta.dayCount} days).
+              Posts, reach, and impressions are summed from posts published in
+              that window and compared to {alignedMeta.priorDateRange}.
+              Engagement and CTR use the same periods.
+              {liveChannelCount === channels.length
+                ? " All selected channels are connected via live sync."
+                : ` ${liveChannelCount} of ${channels.length} selected channels are live — use Pull Latest Data to refresh.`}
+            </p>
+          </div>
+
+          {channels.length === 0 ? (
+            <p className="mt-6 text-sm text-slate-600">
+              No channels selected. Enable at least one channel in the sync
+              panel above to see cross-platform totals.
+            </p>
+          ) : (
+            <div className="mt-6">
+              <ChannelStatsRow
+                channel={channelSummary}
+                priorMonth={priorRates}
+                priorVolume={priorVolume}
+                currentDateRange={alignedMeta.currentDateRange}
+                priorDateRange={alignedMeta.priorDateRange}
+              />
+            </div>
+          )}
         </section>
 
-        <ChannelStatsRow channel={crossChannelAsSummary(totals)} />
-
-        <ChannelComparisonChart channels={channels} />
+        <ChannelComparisonChart
+          channels={currentPeriodChannels}
+          channelPostDateRanges={channelPostDateRanges}
+        />
 
         <section>
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">
-            Channel breakdown
-          </h2>
-          <ChannelOverviewGrid channels={channels} />
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Channel breakdown
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Same period as Social picture · {alignedMeta.currentDateRange}
+            </p>
+          </div>
+          <ChannelOverviewGrid channels={currentPeriodChannels} />
         </section>
 
         <ReportPostsGrid

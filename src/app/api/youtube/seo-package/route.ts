@@ -76,7 +76,7 @@ async function handleYoutubeUrl(body: {
   const token = process.env.APIFY_TOKEN ?? "";
   if (!token) {
     return Response.json(
-      { error: "APIFY_TOKEN is required to pull YouTube video metadata." },
+      { error: "Sync credentials are required to pull YouTube video metadata." },
       { status: 400 }
     );
   }

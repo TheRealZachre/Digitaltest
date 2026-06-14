@@ -1,4 +1,7 @@
 import type { NextConfig } from "next";
+import { loadDevVars } from "./scripts/load-dev-vars.mjs";
+
+loadDevVars();
 
 function isCloudflareBuild(): boolean {
   if (
@@ -35,6 +38,7 @@ const nextConfig: NextConfig = {
     "ffmpeg-static",
     "@xenova/transformers",
     "onnxruntime-node",
+    "pptxgenjs",
   ],
   experimental: {
     proxyClientMaxBodySize: "5gb",

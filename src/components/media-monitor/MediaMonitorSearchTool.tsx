@@ -111,7 +111,7 @@ export function MediaMonitorSearchTool() {
 
       <p className="text-xs text-slate-400">
         News from Google News and Bing News RSS. Optional: set NEWS_API_KEY for
-        NewsAPI and APIFY_TOKEN for live X search. Synced channel posts require
+        NewsAPI and sync credentials for live X search. Synced channel posts require
         Pull Latest Data on the analytics dashboard.
       </p>
     </div>

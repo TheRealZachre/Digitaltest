@@ -2,6 +2,10 @@ import { getPostImageCandidates } from "@/lib/social/image-url";
 import type { SocialPost } from "@/lib/types";
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  if (typeof Buffer !== "undefined") {
+    return Buffer.from(buffer).toString("base64");
+  }
+
   const bytes = new Uint8Array(buffer);
   let binary = "";
   const chunkSize = 0x8000;
@@ -13,15 +17,22 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   return btoa(binary);
 }
 
-async function fetchImageAsDataUrl(url: string): Promise<string | null> {
-  if (typeof window === "undefined") return null;
-
+async function fetchImageAsDataUrl(
+  url: string,
+  origin?: string
+): Promise<string | null> {
   try {
     const absolute = url.startsWith("/")
-      ? `${window.location.origin}${url}`
+      ? `${origin ?? ""}${url}`
       : url;
 
-    const response = await fetch(absolute, { signal: AbortSignal.timeout(12_000) });
+    if (!absolute.startsWith("http")) {
+      return null;
+    }
+
+    const response = await fetch(absolute, {
+      signal: AbortSignal.timeout(12_000),
+    });
     if (!response.ok) return null;
 
     const contentType = response.headers.get("content-type") ?? "";
@@ -38,7 +49,8 @@ async function fetchImageAsDataUrl(url: string): Promise<string | null> {
 }
 
 export async function resolvePostImageData(
-  post: SocialPost
+  post: SocialPost,
+  origin?: string
 ): Promise<string | null> {
   const candidates = getPostImageCandidates(
     post.imageUrl,
@@ -47,7 +59,7 @@ export async function resolvePostImageData(
   );
 
   for (const candidate of candidates) {
-    const dataUrl = await fetchImageAsDataUrl(candidate);
+    const dataUrl = await fetchImageAsDataUrl(candidate, origin);
     if (dataUrl) return dataUrl;
   }
 

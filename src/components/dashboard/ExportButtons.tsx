@@ -4,10 +4,7 @@ import { useState } from "react";
 import { Download, FileSpreadsheet, Loader2, Presentation } from "lucide-react";
 import type { SocialPost } from "@/lib/types";
 import { exportToExcel, exportToPDF } from "@/lib/export";
-import {
-  exportToPowerPoint,
-  type ReportPptxPayload,
-} from "@/lib/export-pptx";
+import type { ReportPptxPayload } from "@/lib/export-pptx-types";
 
 interface ExportButtonsProps {
   posts: SocialPost[];
@@ -28,15 +25,29 @@ export function ExportButtons({
   async function handlePowerPointExport() {
     if (!pptxData || exportingPptx) return;
 
+    const filename = `${filenameBase}.pptx`;
     setExportingPptx(true);
     setPptxStatus("Preparing deck…");
 
     try {
-      await exportToPowerPoint(
-        pptxData,
-        `${filenameBase}.pptx`,
-        setPptxStatus
-      );
+      const response = await fetch("/api/export/pptx", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payload: pptxData, filename }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Export request failed");
+      }
+
+      setPptxStatus("Downloading…");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error(error);
       setPptxStatus("Export failed. Try again.");
@@ -54,7 +65,14 @@ export function ExportButtons({
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => exportToPDF(posts, reportTitle, `${filenameBase}.pdf`)}
+          onClick={() =>
+            exportToPDF(
+              posts,
+              reportTitle,
+              `${filenameBase}.pdf`,
+              pptxData
+            )
+          }
           className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
         >
           <Download className="h-4 w-4" />

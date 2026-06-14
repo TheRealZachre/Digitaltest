@@ -14,7 +14,7 @@ import { QuarterlyMonthTrend } from "@/components/narrative/QuarterlyMonthTrend"
 import { WeeklyPerformancePanel } from "@/components/narrative/WeeklyPerformancePanel";
 import { getMonthPosts, groupByWeek } from "@/lib/narrative/aggregate";
 import { getSelectedAnalyticsChannels } from "@/lib/analytics/channel-selection.server";
-import { weekRowsFromBuckets } from "@/lib/export-pptx";
+import { weekRowsFromBuckets, monthRowFromBucket, periodFromPosts } from "@/lib/export-pptx-types";
 import {
   buildReportSummary,
   getAllPosts,
@@ -37,7 +37,7 @@ export default async function QuarterlyReportPage() {
     getSelectedAnalyticsChannels(),
   ]);
   const brand = await getBrand();
-  const audienceGrowth = getAudienceGrowth();
+  const audienceGrowth = await getAudienceGrowth();
   const allPosts = await getAllPosts();
   const posts = await getPostsForTimeframe("quarterly");
   const summary = buildReportSummary(posts);
@@ -46,6 +46,14 @@ export default async function QuarterlyReportPage() {
   const categories = categoryPerformance(posts);
   const analysis = whatWorkedAnalysis(posts, 0);
   const quarterStart = subDays(new Date(), 90);
+  const priorQuarterStart = subDays(new Date(), 180);
+  const priorQuarterEnd = quarterStart;
+  const priorQuarterPosts = allPosts.filter((p) => {
+    const d = new Date(p.publishedAt);
+    return d >= priorQuarterStart && d < priorQuarterEnd;
+  });
+  const currentQuarterRange = `${format(quarterStart, "MMMM d")} – ${format(new Date(), "MMMM d, yyyy")}`;
+  const priorQuarterRange = `${format(priorQuarterStart, "MMMM d")} – ${format(subDays(priorQuarterEnd, 1), "MMMM d, yyyy")}`;
 
   const recommendations = [
     `Increase investment in ${categories[0]?.category ?? "top"} content — highest engagement at ${formatPercent(categories[0]?.avgEngagementRate ?? 0)}`,
@@ -72,11 +80,17 @@ export default async function QuarterlyReportPage() {
               summary,
               posts,
               weeks: weekRowsFromBuckets(quarterWeeks),
-              quarterMonths: quarterMonths.map((m) => ({
-                label: m.label,
-                postCount: m.postCount,
-                avgEngagementScore: m.avgEngagementScore,
-              })),
+              quarterMonths: quarterMonths.map((m) => monthRowFromBucket(m)),
+              currentPeriod: periodFromPosts(
+                "Current quarter",
+                currentQuarterRange,
+                posts
+              ),
+              priorPeriod: periodFromPosts(
+                "Prior quarter",
+                priorQuarterRange,
+                priorQuarterPosts
+              ),
               categories,
               whatWorked: analysis,
               recommendations,

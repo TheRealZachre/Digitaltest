@@ -14,13 +14,14 @@ import { AudienceGrowthChart } from "@/components/dashboard/AudienceGrowthChart"
 import { SpendPerformanceChart } from "@/components/dashboard/SpendPerformanceChart";
 import { MonthComparisonPanel } from "@/components/narrative/MonthComparisonPanel";
 import { NarrativeSection } from "@/components/narrative/NarrativeSection";
-import { WeeklyPerformancePanel } from "@/components/narrative/WeeklyPerformancePanel";
+import { SplitWeeklyPerformancePanel } from "@/components/narrative/SplitWeeklyPerformancePanel";
 import { getMonthPosts, groupByWeek } from "@/lib/narrative/aggregate";
 import { getSelectedAnalyticsChannels } from "@/lib/analytics/channel-selection.server";
 import {
   monthRowFromBucket,
+  periodFromSummary,
   weekRowsFromBuckets,
-} from "@/lib/export-pptx";
+} from "@/lib/export-pptx-types";
 import {
   buildReportSummary,
   getAllPosts,
@@ -40,7 +41,7 @@ export default async function MonthlyReportPage() {
     getSelectedAnalyticsChannels(),
   ]);
   const brand = await getBrand();
-  const audienceGrowth = getAudienceGrowth();
+  const audienceGrowth = await getAudienceGrowth();
   const allPosts = await getAllPosts();
 
   const currentMonth = getMonthPosts(allPosts, 0);
@@ -76,6 +77,16 @@ export default async function MonthlyReportPage() {
               priorWeeks: weekRowsFromBuckets(priorWeeks),
               currentMonth: monthRowFromBucket(currentMonth),
               priorMonth: monthRowFromBucket(priorMonth),
+              currentPeriod: periodFromSummary(
+                "Current month",
+                currentMonth.dateRange,
+                currentMonth
+              ),
+              priorPeriod: periodFromSummary(
+                "Prior month",
+                priorMonth.dateRange,
+                priorMonth
+              ),
               beats,
               whatWorked: analysis,
               competitors: brand.competitors,
@@ -100,17 +111,18 @@ export default async function MonthlyReportPage() {
 
         <MonthComparisonPanel current={currentMonth} prior={priorMonth} />
 
-        <WeeklyPerformancePanel
-          weeks={currentWeeks}
-          title={`Weekly performance — ${currentMonth.label}`}
+        <SplitWeeklyPerformancePanel
+          current={{
+            label: `Current month · ${currentMonth.label}`,
+            dateRange: currentMonth.dateRange,
+            weeks: currentWeeks,
+          }}
+          prior={{
+            label: `Prior month · ${priorMonth.label}`,
+            dateRange: priorMonth.dateRange,
+            weeks: priorWeeks,
+          }}
         />
-
-        {priorWeeks.length > 0 && (
-          <WeeklyPerformancePanel
-            weeks={priorWeeks}
-            title={`Weekly performance — ${priorMonth.label} (prior month)`}
-          />
-        )}
 
         <NarrativeSection
           posts={priorAndCurrent}

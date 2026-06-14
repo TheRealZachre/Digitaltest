@@ -1,5 +1,22 @@
+import "server-only";
+
 import pptxgen from "pptxgenjs";
 import { resolvePostImageData } from "./export-pptx-images";
+import {
+  CHART_COLORS,
+  comparisonTitle,
+  engagementRateDelta,
+  formatDeltaLabel,
+  shortChartLabel,
+  trendPointsFromMonths,
+  trendPointsFromWeeks,
+} from "./export-charts";
+import type {
+  MonthSummaryRow,
+  PeriodComparisonExport,
+  ReportPptxPayload,
+  WeekSummaryRow,
+} from "./export-pptx-types";
 import type { BeatPerformance } from "./narrative/types";
 import type {
   CategoryPerformance,
@@ -16,38 +33,12 @@ import {
   rankByEngagement,
 } from "./metrics";
 
-export type ReportTimeframeExport = "weekly" | "monthly" | "quarterly";
-
-export interface WeekSummaryRow {
-  label: string;
-  postCount: number;
-  avgEngagementScore: number;
-}
-
-export interface MonthSummaryRow {
-  label: string;
-  postCount: number;
-  avgEngagementScore: number;
-}
-
-export interface ReportPptxPayload {
-  timeframe: ReportTimeframeExport;
-  title: string;
-  subtitle: string;
-  brandName: string;
-  summary: ReportSummary;
-  posts: SocialPost[];
-  weeks?: WeekSummaryRow[];
-  priorWeeks?: WeekSummaryRow[];
-  currentMonth?: MonthSummaryRow;
-  priorMonth?: MonthSummaryRow;
-  quarterMonths?: MonthSummaryRow[];
-  beats?: BeatPerformance[];
-  categories?: CategoryPerformance[];
-  whatWorked?: { worked: string[]; didNot: string[] };
-  recommendations?: string[];
-  competitors?: CompetitorBrand[];
-}
+export type {
+  MonthSummaryRow,
+  ReportPptxPayload,
+  ReportTimeframeExport,
+  WeekSummaryRow,
+} from "./export-pptx-types";
 
 const C = {
   stage: "141319",
@@ -172,92 +163,276 @@ function addKpiSlide(pptx: pptxgen, summary: ReportSummary) {
   });
 }
 
-function addWeekTableSlide(
+function addEngagementBarChart(
+  slide: pptxgen.Slide,
   pptx: pptxgen,
   title: string,
-  weeks: WeekSummaryRow[]
+  labels: string[],
+  values: number[],
+  color: string,
+  layout: { x: number; y: number; w: number; h: number },
+  valueFormat = "0.0"
 ) {
-  if (weeks.length === 0) return;
+  if (labels.length === 0) return;
 
+  slide.addChart(
+    pptx.ChartType.bar,
+    [
+      {
+        name: title,
+        labels: labels.map((label) => shortChartLabel(label, 18)),
+        values,
+      },
+    ],
+    {
+      ...layout,
+      barDir: "col",
+      showTitle: true,
+      title,
+      titleFontSize: 11,
+      titleColor: C.ink,
+      chartColors: [color],
+      showLegend: false,
+      showValue: true,
+      dataLabelPosition: "outEnd",
+      dataLabelColor: C.ink,
+      dataLabelFormatCode: valueFormat,
+      catAxisLabelColor: C.muted,
+      valAxisLabelColor: C.muted,
+      valGridLine: { color: CHART_COLORS.grid, size: 0.5 },
+      catGridLine: { style: "none" },
+      chartArea: { fill: { color: C.white }, roundedCorners: true },
+    }
+  );
+}
+
+function addPeriodComparisonSlide(
+  pptx: pptxgen,
+  timeframe: ReportPptxPayload["timeframe"],
+  current: PeriodComparisonExport,
+  prior: PeriodComparisonExport
+) {
   const slide = pptx.addSlide();
   slide.background = { color: C.paper };
-  addSlideHeader(slide, title);
+  addSlideHeader(slide, comparisonTitle(timeframe));
+
+  const delta = engagementRateDelta(current, prior);
+  const deltaLabel = formatDeltaLabel(delta);
+  const positive = delta === null || delta >= 0;
+
+  slide.addText(deltaLabel, {
+    x: 0.75,
+    y: 0.85,
+    w: 11.5,
+    h: 0.35,
+    fontSize: 12,
+    bold: true,
+    color: positive ? C.emerald : C.rose,
+    fontFace: "Arial",
+  });
+
+  addEngagementBarChart(
+    slide,
+    pptx,
+    "Engagement rate (%)",
+    [current.label, prior.label],
+    [current.avgEngagementRate, prior.avgEngagementRate],
+    CHART_COLORS.current,
+    { x: 0.5, y: 1.25, w: 5.8, h: 2.8 }
+  );
+
+  addEngagementBarChart(
+    slide,
+    pptx,
+    "Post volume",
+    [current.label, prior.label],
+    [current.postCount, prior.postCount],
+    CHART_COLORS.prior,
+    { x: 6.7, y: 1.25, w: 5.8, h: 2.8 },
+    "0"
+  );
 
   const rows: pptxgen.TableRow[] = [
     [
-      tableCell("Week", true),
+      tableCell("Period", true),
+      tableCell("Date range", true),
       tableCell("Posts", true),
-      tableCell("Avg. Engagement Score", true),
+      tableCell("Avg. ER", true),
+      tableCell("Score", true),
     ],
-    ...weeks.map((w) =>
-      tableRow(w.label, String(w.postCount), String(w.avgEngagementScore))
+    tableRow(
+      current.label,
+      current.dateRange,
+      String(current.postCount),
+      formatPercent(current.avgEngagementRate),
+      String(current.avgEngagementScore)
+    ),
+    tableRow(
+      prior.label,
+      prior.dateRange,
+      String(prior.postCount),
+      formatPercent(prior.avgEngagementRate),
+      String(prior.avgEngagementScore)
     ),
   ];
 
   slide.addTable(rows, {
     x: 0.75,
-    y: 1.1,
+    y: 4.35,
     w: 11.5,
-    colW: [5, 2, 4.5],
-    fontSize: 11,
+    colW: [2.2, 3.5, 1.5, 2, 2.3],
+    fontSize: 10,
     fontFace: "Arial",
     color: C.ink,
     border: { type: "solid", color: "E5E7EB", pt: 0.5 },
   });
 }
 
-function addMonthComparisonSlide(
+function addTrendSlide(
   pptx: pptxgen,
-  current: MonthSummaryRow,
-  prior: MonthSummaryRow
+  title: string,
+  subtitle: string,
+  weeks: WeekSummaryRow[],
+  color: string = CHART_COLORS.current
 ) {
+  const points = trendPointsFromWeeks(weeks);
+  if (points.length === 0) return;
+
   const slide = pptx.addSlide();
   slide.background = { color: C.paper };
-  addSlideHeader(slide, "Month-over-Month Comparison");
+  addSlideHeader(slide, title);
 
-  const delta = current.avgEngagementScore - prior.avgEngagementScore;
-  const deltaLabel =
-    delta === 0 ? "Flat" : delta > 0 ? `+${delta} pts` : `${delta} pts`;
+  slide.addText(subtitle, {
+    x: 0.75,
+    y: 0.85,
+    w: 11.5,
+    h: 0.35,
+    fontSize: 11,
+    color: C.muted,
+    fontFace: "Arial",
+  });
 
-  slide.addTable(
+  addEngagementBarChart(
+    slide,
+    pptx,
+    "Engagement rate by period (%)",
+    points.map((p) => p.label),
+    points.map((p) => p.engagementRate),
+    color,
+    { x: 0.5, y: 1.25, w: 7.5, h: 3.2 }
+  );
+
+  addEngagementBarChart(
+    slide,
+    pptx,
+    "Post volume by period",
+    points.map((p) => p.label),
+    points.map((p) => p.postCount),
+    CHART_COLORS.prior,
+    { x: 8.2, y: 1.25, w: 4.3, h: 3.2 },
+    "0"
+  );
+
+  const rows: pptxgen.TableRow[] = [
     [
-      [
-        tableCell("Period", true),
-        tableCell("Posts", true),
-        tableCell("Avg. Engagement Score", true),
-      ],
-      tableRow(
-        current.label,
-        String(current.postCount),
-        String(current.avgEngagementScore)
-      ),
-      tableRow(
-        prior.label,
-        String(prior.postCount),
-        String(prior.avgEngagementScore)
-      ),
+      tableCell("Period", true),
+      tableCell("Posts", true),
+      tableCell("Avg. ER", true),
+      tableCell("Score", true),
     ],
+    ...points.map((p) =>
+      tableRow(
+        p.label,
+        String(p.postCount),
+        formatPercent(p.engagementRate),
+        String(p.engagementScore)
+      )
+    ),
+  ];
+
+  slide.addTable(rows, {
+    x: 0.75,
+    y: 4.65,
+    w: 11.5,
+    colW: [4.5, 2, 2.5, 2.5],
+    fontSize: 10,
+    fontFace: "Arial",
+    color: C.ink,
+    border: { type: "solid", color: "E5E7EB", pt: 0.5 },
+  });
+}
+
+function addQuarterTrendSlide(
+  pptx: pptxgen,
+  months: MonthSummaryRow[]
+) {
+  const points = trendPointsFromMonths(months);
+  if (points.length === 0) return;
+
+  const slide = pptx.addSlide();
+  slide.background = { color: C.paper };
+  addSlideHeader(slide, "Quarterly Month Trend");
+
+  slide.addText(
+    "Month-over-month progress across the quarter — engagement rate, volume, and score",
     {
       x: 0.75,
-      y: 1.2,
+      y: 0.85,
       w: 11.5,
-      colW: [4, 2.5, 5],
-      fontSize: 12,
+      h: 0.35,
+      fontSize: 11,
+      color: C.muted,
       fontFace: "Arial",
-      color: C.ink,
-      border: { type: "solid", color: "E5E7EB", pt: 0.5 },
     }
   );
 
-  slide.addText(`Engagement score change: ${deltaLabel}`, {
+  addEngagementBarChart(
+    slide,
+    pptx,
+    "Engagement rate by month (%)",
+    points.map((p) => p.label),
+    points.map((p) => p.engagementRate),
+    CHART_COLORS.current,
+    { x: 0.5, y: 1.25, w: 7.5, h: 3.2 }
+  );
+
+  addEngagementBarChart(
+    slide,
+    pptx,
+    "Engagement score by month",
+    points.map((p) => p.label),
+    points.map((p) => p.engagementScore),
+    CHART_COLORS.accent,
+    { x: 8.2, y: 1.25, w: 4.3, h: 3.2 },
+    "0"
+  );
+
+  const rows: pptxgen.TableRow[] = [
+    [
+      tableCell("Month", true),
+      tableCell("Posts", true),
+      tableCell("Avg. ER", true),
+      tableCell("Score", true),
+    ],
+    ...points.map((p) =>
+      tableRow(
+        p.label,
+        String(p.postCount),
+        formatPercent(p.engagementRate),
+        String(p.engagementScore)
+      )
+    ),
+  ];
+
+  slide.addTable(rows, {
     x: 0.75,
-    y: 3.2,
-    w: 11,
-    h: 0.5,
-    fontSize: 14,
-    bold: true,
-    color: delta >= 0 ? C.emerald : C.rose,
+    y: 4.65,
+    w: 11.5,
+    colW: [4.5, 2, 2.5, 2.5],
+    fontSize: 10,
     fontFace: "Arial",
+    color: C.ink,
+    border: { type: "solid", color: "E5E7EB", pt: 0.5 },
   });
 }
 
@@ -616,11 +791,27 @@ function addSinglePostSlide(
   });
 }
 
-export async function exportToPowerPoint(
+export async function generatePowerPointBuffer(
   data: ReportPptxPayload,
-  filename: string,
-  onProgress?: (message: string) => void
-): Promise<void> {
+  options?: {
+    onProgress?: (message: string) => void;
+    imageOrigin?: string;
+  }
+): Promise<Buffer> {
+  const pptx = await buildPresentation(
+    data,
+    options?.onProgress,
+    options?.imageOrigin
+  );
+  const output = await pptx.write({ outputType: "nodebuffer" });
+  return Buffer.from(output as ArrayBuffer);
+}
+
+async function buildPresentation(
+  data: ReportPptxPayload,
+  onProgress?: (message: string) => void,
+  imageOrigin?: string
+): Promise<pptxgen> {
   const pptx = new pptxgen();
   pptx.layout = "LAYOUT_WIDE";
   pptx.author = "Vibe. Code. Flow.";
@@ -630,20 +821,58 @@ export async function exportToPowerPoint(
   addTitleSlide(pptx, data);
   addKpiSlide(pptx, data.summary);
 
-  if (data.currentMonth && data.priorMonth) {
-    addMonthComparisonSlide(pptx, data.currentMonth, data.priorMonth);
+  if (data.currentPeriod && data.priorPeriod) {
+    addPeriodComparisonSlide(
+      pptx,
+      data.timeframe,
+      data.currentPeriod,
+      data.priorPeriod
+    );
+  } else if (data.currentMonth && data.priorMonth) {
+    addPeriodComparisonSlide(pptx, "monthly", {
+      label: data.currentMonth.label,
+      dateRange: data.currentMonth.dateRange ?? data.currentMonth.label,
+      postCount: data.currentMonth.postCount,
+      avgEngagementScore: data.currentMonth.avgEngagementScore,
+      avgEngagementRate: data.currentMonth.avgEngagementRate,
+    }, {
+      label: data.priorMonth.label,
+      dateRange: data.priorMonth.dateRange ?? data.priorMonth.label,
+      postCount: data.priorMonth.postCount,
+      avgEngagementScore: data.priorMonth.avgEngagementScore,
+      avgEngagementRate: data.priorMonth.avgEngagementRate,
+    });
   }
 
   if (data.quarterMonths?.length) {
-    addWeekTableSlide(pptx, "Quarterly Month Trend", data.quarterMonths);
+    addQuarterTrendSlide(pptx, data.quarterMonths);
   }
 
   if (data.weeks?.length) {
-    addWeekTableSlide(pptx, "Weekly Performance", data.weeks);
+    const trendTitle =
+      data.timeframe === "quarterly"
+        ? "Weekly Performance Across the Quarter"
+        : data.timeframe === "monthly"
+          ? "Weekly Performance — Current Month"
+          : "Weekly Performance";
+    addTrendSlide(
+      pptx,
+      trendTitle,
+      data.currentPeriod?.dateRange ?? data.subtitle,
+      data.weeks
+    );
   }
 
   if (data.priorWeeks?.length) {
-    addWeekTableSlide(pptx, "Prior Period — Weekly", data.priorWeeks);
+    addTrendSlide(
+      pptx,
+      data.timeframe === "monthly"
+        ? "Weekly Performance — Prior Month"
+        : "Prior Period — Weekly Breakdown",
+      data.priorPeriod?.dateRange ?? "Prior period",
+      data.priorWeeks,
+      CHART_COLORS.prior
+    );
   }
 
   if (data.beats?.length) {
@@ -678,33 +907,11 @@ export async function exportToPowerPoint(
 
     for (let i = 0; i < ranked.length; i++) {
       onProgress?.(`Building slides (${i + 1}/${ranked.length})…`);
-      const imageData = await resolvePostImageData(ranked[i]);
+      const imageData = await resolvePostImageData(ranked[i], imageOrigin);
       addSinglePostSlide(pptx, ranked[i], i + 1, ranked.length, imageData);
     }
   }
 
-  onProgress?.("Saving file…");
-  await pptx.writeFile({ fileName: filename });
-}
-
-export function weekRowsFromBuckets(
-  weeks: { label: string; postCount: number; avgEngagementScore: number }[]
-): WeekSummaryRow[] {
-  return weeks.map((w) => ({
-    label: w.label,
-    postCount: w.postCount,
-    avgEngagementScore: w.avgEngagementScore,
-  }));
-}
-
-export function monthRowFromBucket(bucket: {
-  label: string;
-  postCount: number;
-  avgEngagementScore: number;
-}): MonthSummaryRow {
-  return {
-    label: bucket.label,
-    postCount: bucket.postCount,
-    avgEngagementScore: bucket.avgEngagementScore,
-  };
+  onProgress?.("Finalizing deck…");
+  return pptx;
 }

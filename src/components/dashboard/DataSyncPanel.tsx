@@ -9,6 +9,7 @@ import {
   CHANNEL_LABELS,
   parseAnalyticsChannels,
 } from "@/lib/analytics/channel-selection";
+import { sanitizeUserFacingText } from "@/lib/format-display-provider";
 import { formatFollowerCount } from "@/lib/social/followers";
 import type { Platform } from "@/lib/types";
 
@@ -140,7 +141,7 @@ export function DataSyncPanel({
                 )}
               </>
             ) : (
-              "Using seed data for most channels. Sync to pull live posts from Apify."
+              "Using seed data for most channels. Sync to pull live posts from connected channels."
             )}
           </p>
           {meta?.channels && (
@@ -181,7 +182,11 @@ export function DataSyncPanel({
               })}
             </ul>
           )}
-          {error && <p className="mt-2 text-sm text-rose-600">{error}</p>}
+          {error && (
+            <p className="mt-2 text-sm text-rose-600">
+              {sanitizeUserFacingText(error)}
+            </p>
+          )}
         </div>
         <button
           type="button"

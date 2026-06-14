@@ -3,6 +3,7 @@
 import { Copy, Download, ExternalLink, Heart, MessageCircle, Share2 } from "lucide-react";
 import clsx from "clsx";
 import { formatMediaMonitorForExport } from "@/lib/media-monitor/format-results";
+import { formatDisplayProvider, sanitizeUserFacingText } from "@/lib/format-display-provider";
 import { SocialPostImage } from "@/components/dashboard/SocialPostImage";
 import type { Platform } from "@/lib/types";
 import type { MediaMonitorSearchResponse } from "@/lib/media-monitor/types";
@@ -63,7 +64,7 @@ export function MediaMonitorResults({
               <div className="mt-2 space-y-1 text-xs text-amber-700">
                 {Object.entries(result.errors).map(([key, message]) => (
                   <p key={key}>
-                    {key}: {message}
+                    {key}: {sanitizeUserFacingText(message ?? "")}
                   </p>
                 ))}
               </div>
@@ -161,8 +162,8 @@ export function MediaMonitorResults({
         </h3>
         {result.socialPosts.length === 0 ? (
           <p className="mt-3 text-sm text-slate-500">
-            No social posts found. Sync social channels or set APIFY_TOKEN for
-            live X search.
+            No social posts found. Sync social channels or configure live X
+            search to pull additional posts.
           </p>
         ) : (
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -197,7 +198,7 @@ export function MediaMonitorResults({
                       {new Date(post.publishedAt).toLocaleDateString()}
                     </span>
                     <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
-                      {post.provider}
+                      {formatDisplayProvider(post.provider) ?? post.provider}
                     </span>
                   </div>
                   <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-slate-700">

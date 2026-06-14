@@ -1,4 +1,4 @@
-import { subDays } from "date-fns";
+import { subDays, subMonths } from "date-fns";
 import type {
   AudienceSnapshot,
   BrandProfile,
@@ -12,6 +12,7 @@ import {
   engagementRate,
 } from "@/lib/metrics";
 import { generateChannelSeedPosts } from "@/lib/analytics/channel-seed";
+import { AUDIENCE_GROWTH_HISTORY_MONTHS } from "@/lib/audience-growth";
 import { filterPostsByChannels } from "@/lib/analytics/channel-selection";
 import { getSelectedAnalyticsChannels } from "@/lib/analytics/channel-selection.server";
 import {
@@ -338,6 +339,43 @@ export function getCompetitors(): CompetitorBrand[] {
   return competitors;
 }
 
-export function getAudienceGrowth(): AudienceSnapshot[] {
-  return audienceGrowth;
+function buildAudienceGrowthFromSummaries(
+  summaries: ChannelSummary[]
+): AudienceSnapshot[] {
+  const totalFollowers = summaries.reduce((s, c) => s + c.followers, 0);
+  const monthlyGrowth = summaries.reduce((s, c) => s + c.followerGrowth, 0);
+
+  if (totalFollowers === 0) {
+    return audienceGrowth;
+  }
+
+  const months = AUDIENCE_GROWTH_HISTORY_MONTHS;
+  const startFollowers = Math.max(
+    0,
+    totalFollowers - monthlyGrowth * (months - 1)
+  );
+
+  return Array.from({ length: months }, (_, i) => {
+    const date = subMonths(now, months - 1 - i);
+    const followers = Math.round(startFollowers + monthlyGrowth * i);
+    const previousFollowers =
+      i === 0 ? followers : Math.round(startFollowers + monthlyGrowth * (i - 1));
+
+    return {
+      date: date.toISOString(),
+      followers,
+      growth: followers - previousFollowers,
+    };
+  });
+}
+
+export async function getAudienceGrowth(): Promise<AudienceSnapshot[]> {
+  const { posts, channelSources, channelFollowers } =
+    await getMultiChannelPosts();
+  const summaries = buildAllChannelSummaries(
+    posts,
+    channelSources,
+    channelFollowers
+  );
+  return buildAudienceGrowthFromSummaries(summaries);
 }

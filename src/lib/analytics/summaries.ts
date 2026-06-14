@@ -100,3 +100,116 @@ export function buildCrossChannelTotals(summaries: ChannelSummary[]) {
     channelCount: summaries.length,
   };
 }
+
+export interface CrossChannelActivityTotals {
+  postCount: number;
+  avgEngagementRate: number;
+  avgCTR: number;
+  totalReach: number;
+  totalImpressions: number;
+}
+
+export function buildCrossChannelActivityFromPosts(
+  posts: SocialPost[]
+): CrossChannelActivityTotals {
+  if (posts.length === 0) {
+    return {
+      postCount: 0,
+      avgEngagementRate: 0,
+      avgCTR: 0,
+      totalReach: 0,
+      totalImpressions: 0,
+    };
+  }
+
+  const avgEngagementRate =
+    posts.reduce((sum, post) => sum + engagementRate(post.metrics), 0) /
+    posts.length;
+  const avgCTR =
+    posts.reduce((sum, post) => sum + clickThroughRate(post.metrics), 0) /
+    posts.length;
+
+  return {
+    postCount: posts.length,
+    avgEngagementRate: Math.round(avgEngagementRate * 10) / 10,
+    avgCTR: Math.round(avgCTR * 10) / 10,
+    totalReach: posts.reduce((sum, post) => sum + post.metrics.reach, 0),
+    totalImpressions: posts.reduce(
+      (sum, post) => sum + post.metrics.impressions,
+      0
+    ),
+  };
+}
+
+export interface MonthOverMonthChange {
+  text: string;
+  tone: "positive" | "negative" | "neutral";
+}
+
+export function buildMonthlyChannelSummaries(
+  channels: ChannelSummary[],
+  monthPosts: SocialPost[]
+): ChannelSummary[] {
+  return channels.map((channel) =>
+    buildChannelSummary(
+      channel.platform,
+      monthPosts,
+      channel.dataSource,
+      channel.followers
+    )
+  );
+}
+
+export interface CrossChannelVolumeTotals {
+  postCount: number;
+  totalReach: number;
+  totalImpressions: number;
+}
+
+export function buildCrossChannelVolumeFromPosts(
+  posts: SocialPost[]
+): CrossChannelVolumeTotals {
+  return {
+    postCount: posts.length,
+    totalReach: posts.reduce((sum, post) => sum + post.metrics.reach, 0),
+    totalImpressions: posts.reduce(
+      (sum, post) => sum + post.metrics.impressions,
+      0
+    ),
+  };
+}
+
+export function buildCrossChannelVolumeFromChannelSummaries(
+  summaries: ChannelSummary[]
+): CrossChannelVolumeTotals {
+  return {
+    postCount: summaries.reduce((sum, channel) => sum + channel.postCount, 0),
+    totalReach: summaries.reduce((sum, channel) => sum + channel.totalReach, 0),
+    totalImpressions: summaries.reduce(
+      (sum, channel) => sum + channel.totalImpressions,
+      0
+    ),
+  };
+}
+
+export function formatMonthOverMonthChange(
+  delta: number,
+  formatter: (value: number) => string,
+  comparisonLabel = "vs prior month"
+): MonthOverMonthChange {
+  if (delta === 0) {
+    return {
+      text:
+        comparisonLabel === "vs same period last month"
+          ? "Same as same period last month"
+          : "Same as prior month",
+      tone: "neutral",
+    };
+  }
+
+  const sign = delta > 0 ? "+" : "-";
+  return {
+    text: `${sign}${formatter(Math.abs(delta))} ${comparisonLabel}`,
+    tone: delta > 0 ? "positive" : "negative",
+  };
+}

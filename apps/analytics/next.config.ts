@@ -2,12 +2,14 @@ import type { NextConfig } from "next";
 import { loadEnvConfig } from "@next/env";
 import path from "path";
 import { fileURLToPath } from "url";
+import { loadDevVars } from "../../scripts/load-dev-vars.mjs";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(configDir, "../..");
 const sharedSrc = path.join(repoRoot, "src");
 const localSrc = path.join(configDir, "src");
 
+loadDevVars(repoRoot);
 // Share root .env.local with the analytics app (AUTH_SECRET, API keys, etc.)
 loadEnvConfig(repoRoot);
 
@@ -28,6 +30,7 @@ const nextConfig: NextConfig = {
     "ffmpeg-static",
     "@xenova/transformers",
     "onnxruntime-node",
+    "pptxgenjs",
   ],
   turbopack: {
     resolveAlias: {

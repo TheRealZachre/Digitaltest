@@ -7,6 +7,7 @@ import {
   subMonths,
 } from "date-fns";
 import type { SocialPost } from "@/lib/types";
+import { engagementRate } from "@/lib/metrics";
 import { BEAT_ORDER } from "./beats";
 import { toNarrativePost, toNarrativePosts } from "./scoring";
 import type { BeatStats, MonthBucket, NarrativePost, WeekBucket } from "./types";
@@ -72,6 +73,12 @@ export function groupByWeek(
       const avgEngagementScore = Math.round(
         weekPosts.reduce((s, p) => s + p.engagementScore, 0) / weekPosts.length
       );
+      const avgEngagementRate =
+        Math.round(
+          (weekPosts.reduce((s, p) => s + engagementRate(p.metrics), 0) /
+            weekPosts.length) *
+            10
+        ) / 10;
       return {
         label: `${format(start, "MMM d")} – ${format(end, "MMM d")}`,
         start: start.toISOString(),
@@ -80,6 +87,7 @@ export function groupByWeek(
         postCount: weekPosts.length,
         avgReactions,
         avgEngagementScore,
+        avgEngagementRate,
       };
     });
 }
@@ -104,12 +112,58 @@ export function getMonthPosts(
           narrative.reduce((s, p) => s + p.engagementScore, 0) / narrative.length
         )
       : 0;
+  const avgEngagementRate =
+    narrative.length > 0
+      ? Math.round(
+          (narrative.reduce((s, p) => s + engagementRate(p.metrics), 0) /
+            narrative.length) *
+            10
+        ) / 10
+      : 0;
 
   return {
     label: format(target, "MMMM yyyy"),
     monthKey: format(target, "yyyy-MM"),
+    dateRange: `${format(start, "MMM d")} – ${format(end, "MMM d, yyyy")}`,
+    start: start.toISOString(),
+    end: end.toISOString(),
     posts: narrative,
     postCount: narrative.length,
     avgEngagementScore,
+    avgEngagementRate,
   };
+}
+
+export function summarizeWeekBuckets(weeks: WeekBucket[]) {
+  const active = weeks.filter((w) => w.postCount > 0);
+  const postCount = active.reduce((sum, w) => sum + w.postCount, 0);
+  const avgEngagementScore =
+    postCount > 0
+      ? Math.round(
+          active.reduce(
+            (sum, w) => sum + w.avgEngagementScore * w.postCount,
+            0
+          ) / postCount
+        )
+      : 0;
+  const avgReactions =
+    postCount > 0
+      ? Math.round(
+          active.reduce((sum, w) => sum + w.avgReactions * w.postCount, 0) /
+            postCount
+        )
+      : 0;
+  const avgEngagementRate =
+    postCount > 0
+      ? Math.round(
+          (active.reduce(
+            (sum, w) => sum + w.avgEngagementRate * w.postCount,
+            0
+          ) /
+            postCount) *
+            10
+        ) / 10
+      : 0;
+
+  return { postCount, avgEngagementScore, avgReactions, avgEngagementRate };
 }

@@ -137,9 +137,9 @@ export const brand: BrandProfile = {
 };
 
 export const audienceGrowth: AudienceSnapshot[] = Array.from(
-  { length: 12 },
+  { length: 24 },
   (_, i) => {
-    const date = subMonths(now, 11 - i);
+    const date = subMonths(now, 23 - i);
     const base = 85000 + i * 1200 + Math.floor(Math.random() * 800);
     return {
       date: date.toISOString(),
